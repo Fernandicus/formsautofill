@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { DataProfile } from './components/DataProfile';
 import { ReviewModal } from './components/ReviewModal';
 import { extractFormFields, fillPdf } from './services/pdfService';
@@ -7,7 +7,20 @@ import { DataGroup, FieldMapping, ProcessingStatus, UserField } from './types';
 import { INITIAL_DATA_GROUPS } from './constants';
 
 const App: React.FC = () => {
-  const [dataGroups, setDataGroups] = useState<DataGroup[]>(INITIAL_DATA_GROUPS);
+  const [dataGroups, setDataGroups] = useState<DataGroup[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('autoFillDataGroups');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error("Failed to parse saved data groups", e);
+        }
+      }
+    }
+    return INITIAL_DATA_GROUPS;
+  });
+
   const [status, setStatus] = useState<ProcessingStatus>({ step: 'idle' });
   const [mappings, setMappings] = useState<FieldMapping[]>([]);
   const [showReview, setShowReview] = useState(false);
@@ -16,6 +29,11 @@ const App: React.FC = () => {
   const [currentFile, setCurrentFile] = useState<File | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Persist dataGroups to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('autoFillDataGroups', JSON.stringify(dataGroups));
+  }, [dataGroups]);
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
