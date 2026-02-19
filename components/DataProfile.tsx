@@ -106,7 +106,7 @@ const GroupCard: React.FC<GroupCardProps> = ({
     return (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col transition-all duration-300">
             {/* Header */}
-            <div className="bg-white p-4 border-b border-slate-100 flex items-center justify-between sticky top-0 z-10">
+            <div className="bg-white p-4 border-b border-slate-100 flex items-center justify-between">
                 <div className="flex items-center gap-3 flex-1">
                     <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
@@ -300,7 +300,7 @@ const GroupCard: React.FC<GroupCardProps> = ({
                             className={`w-full text-white text-sm font-semibold py-2.5 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
                                 editingId 
                                 ? 'bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200' 
-                                : 'bg-indigo-600  border border-slate-200 text-slate-600 hover:border-indigo-300 hover:bg-indigo-700'
+                                : 'bg-white border border-slate-200 text-slate-600 hover:border-indigo-300 hover:text-indigo-600'
                             }`}
                         >
                             {editingId ? 'Update Field' : 'Add Field'}
@@ -333,7 +333,7 @@ export const DataProfile: React.FC<DataProfileProps> = ({ groups, setGroups }) =
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col">
         {/* Top Action Bar */}
         <div className="mb-6 flex justify-between items-end">
             <div>
@@ -350,7 +350,7 @@ export const DataProfile: React.FC<DataProfileProps> = ({ groups, setGroups }) =
             </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto pr-2 pb-10 space-y-6">
+        <div className="space-y-6 pb-10">
             {groups.map(group => (
                 <GroupCard 
                     key={group.id} 

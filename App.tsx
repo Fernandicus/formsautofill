@@ -138,9 +138,9 @@ const App: React.FC = () => {
         <div className="w-full">
             {/* Full Width Data Profile */}
             {/* Height calculated to fill screen minus header and padding */}
-            <div className="h-[calc(100vh-140px)] min-h-[600px]">
+            
                 <DataProfile groups={dataGroups} setGroups={setDataGroups} />
-            </div>
+            
         </div>
       </main>
 
