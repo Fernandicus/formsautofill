@@ -1,0 +1,5 @@
+{
+  "name": "AutoFill AI PDF",
+  "description": "Intelligent PDF form filler that uses Gemini to map your personal data to PDF form fields automatically.",
+  "requestFramePermissions": []
+}
