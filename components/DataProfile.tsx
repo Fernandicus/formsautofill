@@ -18,9 +18,15 @@ const GroupCard: React.FC<GroupCardProps> = ({
     updateGroup, 
     deleteGroup 
 }) => {
-    const [newKey, setNewKey] = useState('');
-    const [newValue, setNewValue] = useState('');
+    // State for Adding
+    const [addKey, setAddKey] = useState('');
+    const [addValue, setAddValue] = useState('');
+    
+    // State for Editing
     const [editingId, setEditingId] = useState<string | null>(null);
+    const [editKey, setEditKey] = useState('');
+    const [editValue, setEditValue] = useState('');
+
     const [isEditingName, setIsEditingName] = useState(false);
     const [tempName, setTempName] = useState(group.name);
     
@@ -39,35 +45,41 @@ const GroupCard: React.FC<GroupCardProps> = ({
         }
     };
 
-    const handleSaveField = () => {
-        if (!newKey.trim() || !newValue.trim()) return;
+    const handleAddField = () => {
+        if (!addKey.trim() || !addValue.trim()) return;
+        
+        const newField: UserField = {
+            id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+            key: addKey,
+            value: addValue
+        };
+        updateGroup({ ...group, fields: [...group.fields, newField] });
+        setAddKey('');
+        setAddValue('');
+    };
 
-        if (editingId) {
-            const updatedFields = group.fields.map(f => f.id === editingId ? { ...f, key: newKey, value: newValue } : f);
-            updateGroup({ ...group, fields: updatedFields });
-            setEditingId(null);
-        } else {
-            const newField: UserField = {
-                id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-                key: newKey,
-                value: newValue
-            };
-            updateGroup({ ...group, fields: [...group.fields, newField] });
-        }
-        setNewKey('');
-        setNewValue('');
+    const handleUpdateField = () => {
+        if (!editingId || !editKey.trim() || !editValue.trim()) return;
+
+        const updatedFields = group.fields.map(f => 
+            f.id === editingId ? { ...f, key: editKey, value: editValue } : f
+        );
+        updateGroup({ ...group, fields: updatedFields });
+        setEditingId(null);
+        setEditKey('');
+        setEditValue('');
     };
 
     const handleEditField = (field: UserField) => {
-        setNewKey(field.key);
-        setNewValue(field.value);
+        setEditKey(field.key);
+        setEditValue(field.value);
         setEditingId(field.id);
     };
 
     const handleCancelEdit = () => {
-        setNewKey('');
-        setNewValue('');
         setEditingId(null);
+        setEditKey('');
+        setEditValue('');
     };
 
     const handleRemoveField = (id: string) => {
@@ -229,81 +241,107 @@ const GroupCard: React.FC<GroupCardProps> = ({
                         {group.fields.map((field) => (
                             <div 
                                 key={field.id} 
-                                className={`flex items-center gap-3 p-3 rounded-lg group border transition-all ${
+                                className={`flex items-start gap-3 p-3 rounded-lg group border transition-all ${
                                     editingId === field.id 
-                                        ? 'bg-indigo-50 border-indigo-200 ring-1 ring-indigo-200' 
+                                        ? 'bg-indigo-50 border-indigo-200 ring-1 ring-indigo-200 shadow-sm' 
                                         : 'bg-slate-50 border-transparent hover:border-slate-200'
                                 }`}
                             >
-                                <div className="flex-1 min-w-0">
-                                    <span className="text-xs font-semibold text-indigo-600 uppercase tracking-wider block truncate">{field.key}</span>
-                                    <span className="text-slate-800 font-medium block truncate">{field.value}</span>
-                                </div>
-                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity focus-within:opacity-100">
-                                    <button 
-                                        type="button"
-                                        onClick={() => handleEditField(field)}
-                                        className={`p-2 transition-colors rounded-md ${
-                                            editingId === field.id 
-                                            ? 'text-indigo-600 bg-indigo-100' 
-                                            : 'text-slate-300 hover:text-indigo-600 hover:bg-white'
-                                        }`}
-                                    >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                                    </button>
-                                    <button 
-                                        type="button"
-                                        onClick={() => handleRemoveField(field.id)}
-                                        className="text-slate-300 hover:text-red-500 hover:bg-white transition-colors p-2 rounded-md"
-                                    >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                    </button>
-                                </div>
+                                {editingId === field.id ? (
+                                    <>
+                                        <div className="flex-1 min-w-0 flex flex-col gap-2">
+                                            <input 
+                                                value={editKey}
+                                                onChange={e => setEditKey(e.target.value)}
+                                                className="text-xs font-bold text-indigo-600 uppercase tracking-wider w-full bg-white border border-indigo-200 rounded px-2 py-1.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none placeholder-indigo-300"
+                                                placeholder="FIELD NAME"
+                                            />
+                                            <input 
+                                                value={editValue}
+                                                onChange={e => setEditValue(e.target.value)}
+                                                onKeyDown={e => e.key === 'Enter' && handleUpdateField()}
+                                                className="text-slate-800 font-medium w-full bg-white border border-indigo-200 rounded px-2 py-1.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                                                placeholder="Value"
+                                                autoFocus
+                                            />
+                                        </div>
+                                        <div className="flex flex-col gap-1 pt-1">
+                                            <button 
+                                                onClick={handleUpdateField} 
+                                                className="p-1.5 text-white bg-indigo-600 hover:bg-indigo-700 rounded-md shadow-sm transition-colors"
+                                                title="Save"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                                            </button>
+                                            <button 
+                                                onClick={handleCancelEdit} 
+                                                className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                                                title="Cancel"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                            </button>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="flex-1 min-w-0 cursor-pointer" onClick={() => handleEditField(field)}>
+                                            <span className="text-xs font-semibold text-indigo-600 uppercase tracking-wider block truncate mb-0.5">{field.key}</span>
+                                            <span className="text-slate-800 font-medium block break-words">{field.value}</span>
+                                        </div>
+                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity focus-within:opacity-100 self-center">
+                                            <button 
+                                                type="button"
+                                                onClick={() => handleEditField(field)}
+                                                className="p-2 text-slate-300 hover:text-indigo-600 hover:bg-white rounded-md transition-colors"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                            </button>
+                                            <button 
+                                                type="button"
+                                                onClick={() => handleRemoveField(field.id)}
+                                                className="text-slate-300 hover:text-red-500 hover:bg-white transition-colors p-2 rounded-md"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         ))}
                     </div>
 
-                    <div className={`p-4 border-t border-slate-100 bg-slate-50/50 ${editingId ? 'bg-indigo-50/50' : ''}`}>
+                    <div className="p-4 border-t border-slate-100 bg-slate-50/50">
                          <div className="flex justify-between items-center mb-3">
                             <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                                {editingId ? 'Editing Field' : 'Add Field'}
+                                Add Field
                             </span>
-                            {editingId && (
-                                <button type="button" onClick={handleCancelEdit} className="text-xs font-medium text-slate-500 hover:text-slate-700 underline">
-                                    Cancel
-                                </button>
-                            )}
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                             <div className="relative">
                                 <input
                                     type="text"
-                                    value={newKey}
-                                    onChange={(e) => setNewKey(e.target.value)}
+                                    value={addKey}
+                                    onChange={(e) => setAddKey(e.target.value)}
                                     className="w-full text-sm bg-white text-slate-900 border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 px-3 py-2 outline-none border placeholder-slate-400"
                                     placeholder="Type (e.g. Email)"
                                 />
                             </div>
                             <input
                                 type="text"
-                                value={newValue}
-                                onChange={(e) => setNewValue(e.target.value)}
-                                onKeyDown={(e) => e.key === 'Enter' && handleSaveField()}
+                                value={addValue}
+                                onChange={(e) => setAddValue(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleAddField()}
                                 className="w-full text-sm bg-white text-slate-900 border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 px-3 py-2 outline-none border placeholder-slate-400"
                                 placeholder="Value"
                             />
                         </div>
                         <button
                             type="button"
-                            onClick={handleSaveField}
-                            disabled={!newKey.trim() || !newValue.trim()}
-                            className={`w-full text-white text-sm font-semibold py-2.5 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
-                                editingId 
-                                ? 'bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200' 
-                                : 'bg-white border border-slate-200 text-slate-600 hover:border-indigo-300 hover:text-indigo-600'
-                            }`}
+                            onClick={handleAddField}
+                            disabled={!addKey.trim() || !addValue.trim()}
+                            className="w-full text-white text-sm font-semibold py-2.5 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-600 hover:border-indigo-300 hover:text-indigo-600"
                         >
-                            {editingId ? 'Update Field' : 'Add Field'}
+                            Add Field
                         </button>
                     </div>
                 </div>
