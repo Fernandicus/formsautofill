@@ -73,7 +73,7 @@ const App: React.FC = () => {
         }))
       );
 
-      const generatedMappings = await mapFieldsWithGemini(pdfFields, flattenedFields);
+      const generatedMappings = await mapFieldsWithGemini(pdfFields, flattenedFields, file);
       
       setMappings(generatedMappings);
       setStatus({ step: 'review' });

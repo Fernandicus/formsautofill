@@ -14,6 +14,9 @@ export interface DataGroup {
 export interface PdfFieldInfo {
   name: string;
   type: 'Text' | 'CheckBox' | 'Dropdown' | 'Other';
+  label?: string; // Visual label extracted via AI
+  rect?: { x: number, y: number, width: number, height: number, pageIndex: number };
+  options?: string[]; // Available options for Dropdowns/RadioGroups
 }
 
 export interface FieldMapping {
@@ -22,6 +25,7 @@ export interface FieldMapping {
   confidence?: 'high' | 'low';
   originalValue?: string; // To track edits
   isSuggestion?: boolean; // Indicates if the value was AI-generated rather than from user profile
+  label?: string; // Visual label for display
 }
 
 export interface ProcessingStatus {

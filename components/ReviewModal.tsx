@@ -72,7 +72,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ mappings, onConfirm, o
       <div className="flex-1">
         <div className="flex justify-between mb-1">
             <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
-                {map.pdfFieldName}
+                {map.label || map.pdfFieldName}
             </label>
             {map.isSuggestion && (
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 uppercase tracking-wide">

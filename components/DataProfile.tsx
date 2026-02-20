@@ -11,12 +11,14 @@ interface GroupCardProps {
     group: DataGroup; 
     updateGroup: (g: DataGroup) => void;
     deleteGroup: (id: string) => void;
+    duplicateGroup: (id: string) => void;
 }
 
 const GroupCard: React.FC<GroupCardProps> = ({ 
     group, 
     updateGroup, 
-    deleteGroup 
+    deleteGroup,
+    duplicateGroup
 }) => {
     // State for Adding
     const [addKey, setAddKey] = useState('');
@@ -144,13 +146,39 @@ const GroupCard: React.FC<GroupCardProps> = ({
                     )}
                 </div>
                 <div className="flex items-center gap-2">
+                    <input 
+                        type="file" 
+                        ref={fileInputRef} 
+                        onChange={handleFileChange} 
+                        accept="application/pdf,image/png,image/jpeg,image/webp" 
+                        className="hidden" 
+                    />
                     <button 
                         type="button"
-                        onClick={toggleExpand}
-                        className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-                        title={group.isExpanded ? "Collapse" : "Expand"}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleUploadClick();
+                        }}
+                        disabled={isExtracting}
+                        className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                        title="Auto-extract data from document (PDF, PNG, JPG)"
                     >
-                        <svg className={`w-5 h-5 transform transition-transform ${group.isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                        {isExtracting ? (
+                            <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                        ) : (
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
+                        )}
+                    </button>
+                    <button 
+                        type="button"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            duplicateGroup(group.id);
+                        }}
+                        className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                        title="Duplicate Group"
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                     </button>
                     {group.id !== 'default' && (
                         <>
@@ -192,46 +220,20 @@ const GroupCard: React.FC<GroupCardProps> = ({
                             )}
                         </>
                     )}
+                    <button 
+                        type="button"
+                        onClick={toggleExpand}
+                        className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                        title={group.isExpanded ? "Collapse" : "Expand"}
+                    >
+                        <svg className={`w-5 h-5 transform transition-transform ${group.isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                    </button>
                 </div>
             </div>
 
             {/* Content */}
             {group.isExpanded && (
                 <div className="flex flex-col">
-                    {/* Upload Auto-Extract Section */}
-                    <div className="p-4 border-b border-slate-100 bg-slate-50/50">
-                        <input 
-                            type="file" 
-                            ref={fileInputRef} 
-                            onChange={handleFileChange} 
-                            accept="application/pdf,image/png,image/jpeg,image/webp" 
-                            className="hidden" 
-                        />
-                        <button 
-                            type="button"
-                            onClick={handleUploadClick}
-                            disabled={isExtracting}
-                            className="w-full border-2 border-dashed border-indigo-200 bg-indigo-50/30 hover:bg-indigo-50 hover:border-indigo-300 transition-all rounded-xl p-6 flex flex-col items-center justify-center gap-2 group/upload text-center"
-                        >
-                            {isExtracting ? (
-                                <div className="flex flex-col items-center animate-pulse">
-                                     <div className="w-8 h-8 border-2 border-indigo-300 border-t-indigo-600 rounded-full animate-spin mb-2"></div>
-                                     <span className="text-sm font-semibold text-indigo-700">Analyzing document...</span>
-                                </div>
-                            ) : (
-                                <>
-                                    <div className="p-3 bg-white rounded-full shadow-sm text-indigo-500 group-hover/upload:text-indigo-600 transition-colors">
-                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-semibold text-slate-700">Upload a document to auto-extract data</p>
-                                        <p className="text-xs text-slate-500 mt-1">Supports PDF, PNG, JPG. We'll identify keys and values automatically.</p>
-                                    </div>
-                                </>
-                            )}
-                        </button>
-                    </div>
-
                     <div className="p-4 space-y-3">
                         {group.fields.length === 0 && !isExtracting && (
                             <div className="text-center py-4 text-slate-400 text-sm italic">
@@ -370,6 +372,26 @@ export const DataProfile: React.FC<DataProfileProps> = ({ groups, setGroups }) =
      setGroups(prevGroups => prevGroups.filter(g => g.id !== id));
   };
 
+  const duplicateGroup = (id: string) => {
+      const groupToDuplicate = groups.find(g => g.id === id);
+      if (!groupToDuplicate) return;
+
+      const newGroup: DataGroup = {
+          ...groupToDuplicate,
+          id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+          name: `${groupToDuplicate.name} (Copy)`,
+          fields: groupToDuplicate.fields.map(f => ({
+              ...f,
+              id: Date.now().toString() + Math.random().toString(36).substr(2, 9)
+          }))
+      };
+      
+      const index = groups.findIndex(g => g.id === id);
+      const newGroups = [...groups];
+      newGroups.splice(index + 1, 0, newGroup);
+      setGroups(newGroups);
+  };
+
   return (
     <div className="flex flex-col">
         {/* Top Action Bar */}
@@ -395,6 +417,7 @@ export const DataProfile: React.FC<DataProfileProps> = ({ groups, setGroups }) =
                     group={group} 
                     updateGroup={updateGroup}
                     deleteGroup={deleteGroup}
+                    duplicateGroup={duplicateGroup}
                 />
             ))}
         </div>
