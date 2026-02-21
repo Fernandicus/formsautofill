@@ -93,17 +93,17 @@ const App: React.FC = () => {
     try {
       const pdfBytes = await fillPdf(currentFile, finalMappings);
       
-      // Trigger download
       const blob = new Blob([pdfBytes], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `filled_${currentFile.name}`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      
+      // Try to open in new tab
+      const win = window.open(url, '_blank');
 
-      setStatus({ step: 'completed', message: 'PDF Ready! Download started.' });
+      setStatus({ 
+          step: 'completed', 
+          message: win ? 'PDF Ready! Opened in new tab.' : 'PDF Ready! Click below to view.',
+          downloadUrl: url
+      });
     } catch (error) {
       setStatus({ step: 'error', message: 'Failed to write to PDF.' });
     }
@@ -211,7 +211,20 @@ const App: React.FC = () => {
                 </div>
                 <h3 className="text-lg font-bold text-slate-800 mb-1">Success!</h3>
                 <p className="text-slate-500 text-sm mb-6">{status.message}</p>
-                <button onClick={closeStatusModal} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 rounded-lg transition-colors shadow-lg shadow-indigo-200">
+                
+                {status.downloadUrl && (
+                    <a 
+                        href={status.downloadUrl} 
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full mb-3 bg-indigo-600 text-white hover:bg-indigo-700 font-semibold py-2 rounded-lg transition-colors shadow-lg shadow-indigo-200 flex items-center justify-center gap-2"
+                    >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                        Open PDF
+                    </a>
+                )}
+
+                <button onClick={closeStatusModal} className="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold py-2 rounded-lg transition-colors">
                   Done
                 </button>
               </div>

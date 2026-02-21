@@ -31,4 +31,5 @@ export interface FieldMapping {
 export interface ProcessingStatus {
   step: 'idle' | 'analyzing_pdf' | 'mapping_ai' | 'review' | 'filling' | 'completed' | 'error';
   message?: string;
+  downloadUrl?: string;
 }
