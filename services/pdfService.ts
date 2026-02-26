@@ -1,18 +1,20 @@
-import { PDFDocument, PDFTextField, PDFCheckBox, PDFDropdown, PDFRadioGroup, PDFName } from 'pdf-lib';
+import { PDFDocument, PDFTextField, PDFCheckBox, PDFDropdown, PDFRadioGroup } from 'pdf-lib';
 import { PdfFieldInfo, FieldMapping } from '../types';
-import { GoogleGenAI, Type } from "@google/genai";
 
-// Helper to get coordinates
-const getFieldRect = (field: any, doc: PDFDocument) => {
+const TRUTHY_VALUES = ['true', 'yes', 'checked', 'x', '1', 'on'];
+const FALSY_VALUES = ['false', 'no', 'unchecked', '0', 'off'];
+
+/**
+ * Helper to get field coordinates
+ */
+const getFieldRect = (field: any) => {
   try {
     const widgets = field.acroField.getWidgets();
     if (widgets && widgets.length > 0) {
       const rect = widgets[0].getRectangle();
       // Find which page this widget belongs to
       // This is expensive if we iterate all pages. 
-      // For now, let's assume we just want the rect and we'll tell Gemini "Page X" if we can find it.
-      // pdf-lib doesn't easily give page index from widget.
-      // We'll return the rect and hope Gemini can figure it out or we just send the rect context.
+      // For now, let's assume page 0 or handle page context if needed.
       return { x: rect.x, y: rect.y, width: rect.width, height: rect.height, pageIndex: 0 }; 
     }
   } catch (e) {
@@ -27,7 +29,7 @@ export const extractFormFields = async (file: File): Promise<PdfFieldInfo[]> => 
   const form = pdfDoc.getForm();
   const fields = form.getFields();
 
-  const extractedFields: PdfFieldInfo[] = fields.map(f => {
+  return fields.map(f => {
     let type: PdfFieldInfo['type'] = 'Other';
     
     if (f instanceof PDFTextField) type = 'Text';
@@ -37,29 +39,21 @@ export const extractFormFields = async (file: File): Promise<PdfFieldInfo[]> => 
 
     let options: string[] | undefined = undefined;
     if (f instanceof PDFDropdown || f instanceof PDFRadioGroup) {
-        try {
-            options = f.getOptions();
-        } catch (e) {
-            // ignore if no options
-        }
+      try {
+        options = f.getOptions();
+      } catch (e) {
+        // ignore if no options
+      }
     }
 
     return {
       name: f.getName(),
       type,
-      rect: getFieldRect(f, pdfDoc),
+      rect: getFieldRect(f),
       options
     };
   });
-
-  // Now enrich with labels using Gemini
-  // OPTIMIZATION: We now do visual mapping in the main mapping step, so we skip this separate enrichment step
-  // to save time and API calls. The main mapping step will return visual labels.
-  return extractedFields;
 };
-
-// Removed enrichFieldsWithLabels function as it is no longer needed
-
 
 export const fillPdf = async (file: File, mappings: FieldMapping[]): Promise<Uint8Array> => {
   const arrayBuffer = await file.arrayBuffer();
@@ -70,56 +64,36 @@ export const fillPdf = async (file: File, mappings: FieldMapping[]): Promise<Uin
     if (!map.userValue) continue;
 
     try {
-      // Get the field by exact name
       const field = form.getField(map.pdfFieldName);
       
-      // Handle Text Fields
       if (field instanceof PDFTextField) {
         field.setText(map.userValue);
       }
       
-      // Handle Checkboxes
       else if (field instanceof PDFCheckBox) {
         const val = map.userValue.toLowerCase().trim();
-        // Broaden the truthy checks
-        if (['true', 'yes', 'checked', 'x', '1', 'on'].includes(val)) {
+        if (TRUTHY_VALUES.includes(val)) {
           field.check();
-        } else if (['false', 'no', 'unchecked', '0', 'off'].includes(val)) {
-            field.uncheck();
+        } else if (FALSY_VALUES.includes(val)) {
+          field.uncheck();
         }
       }
       
-      // Handle Dropdowns
-      else if (field instanceof PDFDropdown) {
+      else if (field instanceof PDFDropdown || field instanceof PDFRadioGroup) {
         const options = field.getOptions();
-        // Try exact match
+        const lowerValue = map.userValue.toLowerCase();
+        
+        // Try exact match first, then case-insensitive
         if (options.includes(map.userValue)) {
           field.select(map.userValue);
         } else {
-            // Try case-insensitive match
-            const lowerValue = map.userValue.toLowerCase();
-            const match = options.find(o => o.toLowerCase() === lowerValue);
-            if (match) {
-                field.select(match);
-            } else {
-                console.warn(`Option "${map.userValue}" not found in dropdown "${map.pdfFieldName}". Available: ${options.join(', ')}`);
-            }
+          const match = options.find(o => o.toLowerCase() === lowerValue);
+          if (match) {
+            field.select(match);
+          } else if (field instanceof PDFDropdown) {
+            console.warn(`Option "${map.userValue}" not found in dropdown "${map.pdfFieldName}"`);
+          }
         }
-      }
-
-      // Handle Radio Groups
-      else if (field instanceof PDFRadioGroup) {
-         const options = field.getOptions();
-         if (options.includes(map.userValue)) {
-            field.select(map.userValue);
-         } else {
-            // Try case-insensitive match
-            const lowerValue = map.userValue.toLowerCase();
-            const match = options.find(o => o.toLowerCase() === lowerValue);
-            if (match) {
-                field.select(match);
-            }
-         }
       }
 
     } catch (e) {
@@ -127,8 +101,5 @@ export const fillPdf = async (file: File, mappings: FieldMapping[]): Promise<Uin
     }
   }
 
-  // Saving usually updates appearances, but for some viewers, fields might appear empty until clicked 
-  // if the font is not standard. pdf-lib handles standard fonts well. 
-  // We return the bytes.
   return await pdfDoc.save();
 };

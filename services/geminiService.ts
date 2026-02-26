@@ -1,23 +1,33 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { PdfFieldInfo, UserField, FieldMapping } from "../types";
 
+const GEMINI_MODEL = 'gemini-3-flash-preview';
+
+/**
+ * Converts a File object to a base64 string
+ */
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      resolve(result.split(',')[1]);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
+
 export const mapFieldsWithGemini = async (
   pdfFields: PdfFieldInfo[],
   userFields: UserField[],
   file: File
 ): Promise<FieldMapping[]> => {
-  const apiKey = process.env.API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error("API Key not found");
 
   const ai = new GoogleGenAI({ apiKey });
-
-  // Convert File to Base64
-  const base64 = await new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve((reader.result as string).split(',')[1]);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
+  const base64 = await fileToBase64(file);
 
   const prompt = `
     You are an intelligent form-filling assistant. 
@@ -34,7 +44,7 @@ export const mapFieldsWithGemini = async (
 
     Rules:
     - If the visual label says "Name", find the User Data for Name.
-    - If the visual label says "City" or "Ort", find the User Data for City.
+    - If the visual label says "City", find the User Data for City.
     - If the visual label says "Email", find the User Data for Email.
     - Contextual Inference: If User Data has "Car: Tesla", and visual field says "Vehicle", map it.
     - Checkboxes: Return "true", "yes", "checked" if applicable.
@@ -49,7 +59,7 @@ export const mapFieldsWithGemini = async (
   `;
 
   const response = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
+    model: GEMINI_MODEL,
     contents: {
         parts: [
             { inlineData: { mimeType: 'application/pdf', data: base64 } },
@@ -75,10 +85,9 @@ export const mapFieldsWithGemini = async (
     }
   });
 
-  const rawText = response.text || "[]";
   try {
-    const mappings = JSON.parse(rawText) as FieldMapping[];
-    return mappings;
+    const rawText = response.text || "[]";
+    return JSON.parse(rawText) as FieldMapping[];
   } catch (e) {
     console.error("Failed to parse Gemini response", e);
     return [];
@@ -86,22 +95,13 @@ export const mapFieldsWithGemini = async (
 };
 
 export const extractDataFromDocument = async (file: File): Promise<UserField[]> => {
-  const apiKey = process.env.API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
+
+
   if (!apiKey) throw new Error("API Key not found");
 
   const ai = new GoogleGenAI({ apiKey });
-
-  // Convert File to Base64
-  const base64 = await new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-        const result = reader.result as string;
-        // Remove data URL prefix
-        resolve(result.split(',')[1]);
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
+  const base64 = await fileToBase64(file);
 
   const prompt = `
     Analyze this document (image or PDF) and extract all relevant data fields that would be useful for filling forms.
@@ -116,7 +116,7 @@ export const extractDataFromDocument = async (file: File): Promise<UserField[]> 
   `;
 
   const response = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
+    model: GEMINI_MODEL,
     contents: {
         parts: [
             { inlineData: { mimeType: file.type, data: base64 } },
@@ -138,16 +138,16 @@ export const extractDataFromDocument = async (file: File): Promise<UserField[]> 
     }
   });
   
-  const rawText = response.text || "[]";
   try {
-      const data = JSON.parse(rawText) as {key: string, value: string}[];
-      return data.map(item => ({
-          id: Date.now().toString() + Math.random().toString(),
-          key: item.key,
-          value: item.value
-      }));
+    const rawText = response.text || "[]";
+    const data = JSON.parse(rawText) as {key: string, value: string}[];
+    return data.map(item => ({
+        id: crypto.randomUUID(),
+        key: item.key,
+        value: item.value
+    }));
   } catch (e) {
-      console.error("Failed to parse extracted data", e);
-      return [];
+    console.error("Failed to parse extracted data", e);
+    return [];
   }
 };
