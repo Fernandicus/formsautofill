@@ -122,8 +122,8 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ mappings, fromLanguage
             
             {/* Suggestions Section */}
             {suggestedFields.length > 0 && (
-                <div className="bg-white rounded-xl border border-amber-200 shadow-sm overflow-hidden">
-                    <div className="bg-amber-50 px-6 py-4 border-b border-amber-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div >
+                    <div className=" flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
                             <h4 className="text-amber-800 font-bold flex items-center gap-2">
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -144,7 +144,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ mappings, fromLanguage
                              </button>
                         </div>
                     </div>
-                    <div className="p-4 space-y-3">
+                    <div className="py-4 space-y-3">
                         {editedMappings.map((m, i) => m.isSuggestion ? (
                           <MappingRow 
                             key={`${m.pdfFieldName}-${i}`}
