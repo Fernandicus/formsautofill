@@ -18,6 +18,7 @@ const App: React.FC = () => {
 
   const [status, setStatus] = useState<ProcessingStatus>({ step: 'idle' });
   const [mappings, setMappings] = useState<FieldMapping[]>([]);
+  const [pdfLanguage, setPdfLanguage] = useState<string>('en');
   const [showReview, setShowReview] = useState(false);
   const [currentFile, setCurrentFile] = useState<File | null>(null);
   
@@ -47,9 +48,10 @@ const App: React.FC = () => {
         }))
       );
 
-      const generatedMappings = await mapFieldsWithGemini(pdfFields, flattenedFields, file);
+      const { mappings: generatedMappings, detectedLanguage } = await mapFieldsWithGemini(pdfFields, flattenedFields, file);
       
       setMappings(generatedMappings);
+      setPdfLanguage(detectedLanguage);
       setStatus({ step: 'review' });
       setShowReview(true);
 
@@ -147,6 +149,7 @@ const App: React.FC = () => {
       {showReview && (
         <ReviewModal 
           mappings={mappings} 
+          fromLanguage={pdfLanguage}
           onConfirm={handleConfirmFill} 
           onCancel={() => { setShowReview(false); setStatus({ step: 'idle' }); }} 
         />

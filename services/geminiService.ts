@@ -22,7 +22,7 @@ export const mapFieldsWithGemini = async (
   pdfFields: PdfFieldInfo[],
   userFields: UserField[],
   file: File
-): Promise<FieldMapping[]> => {
+): Promise<{ mappings: FieldMapping[], detectedLanguage: string }> => {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error("API Key not found");
 
@@ -39,8 +39,7 @@ export const mapFieldsWithGemini = async (
        - Use the 'rect' coordinates to locate the field on the page.
        - Read the text label NEXT TO or ABOVE the field to understand its meaning (e.g. "Name:", "City:", "Email:").
        - Do NOT rely solely on the internal 'name' (e.g. "Text1") as it may be cryptic.
-    2. Match the User Data to these fields based on your visual understanding.
-    3. Return the mapping.
+    4. Identify the predominant language of the PDF document and return its ISO 639-1 code (e.g., "en", "es", "fr").
 
     Rules:
     - If the visual label says "Name", find the User Data for Name.
@@ -53,6 +52,7 @@ export const mapFieldsWithGemini = async (
     - 'pdfFieldName': MUST match the exact 'name' from the provided PDF Fields list.
     - 'label': The visual label you found on the page (e.g. "First Name").
     - 'isSuggestion': True if inferred/guessed.
+    - 'detectedLanguage': Return the ISO 639-1 code for the document's language.
 
     PDF Fields List: ${JSON.stringify(pdfFields.map(f => ({ name: f.name, rect: f.rect, options: f.options })))}
     User Data: ${JSON.stringify(userFields.map(u => ({ group: u.group, key: u.key, value: u.value })))}
@@ -69,28 +69,35 @@ export const mapFieldsWithGemini = async (
     config: {
       responseMimeType: "application/json",
       responseSchema: {
-        type: Type.ARRAY,
-        items: {
-          type: Type.OBJECT,
-          properties: {
-            pdfFieldName: { type: Type.STRING, description: "The exact name of the field in the PDF" },
-            label: { type: Type.STRING, description: "The visual label found on the page" },
-            userValue: { type: Type.STRING, description: "The value to fill" },
-            confidence: { type: Type.STRING, enum: ["high", "low"], description: "Confidence level" },
-            isSuggestion: { type: Type.BOOLEAN, description: "True if this is an AI guess/inference, False if direct match" }
+        type: Type.OBJECT,
+        properties: {
+          mappings: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                pdfFieldName: { type: Type.STRING, description: "The exact name of the field in the PDF" },
+                label: { type: Type.STRING, description: "The visual label found on the page" },
+                userValue: { type: Type.STRING, description: "The value to fill" },
+                confidence: { type: Type.STRING, enum: ["high", "low"], description: "Confidence level" },
+                isSuggestion: { type: Type.BOOLEAN, description: "True if this is an AI guess/inference, False if direct match" }
+              },
+              required: ["pdfFieldName", "userValue", "confidence", "isSuggestion"]
+            }
           },
-          required: ["pdfFieldName", "userValue", "confidence", "isSuggestion"]
-        }
+          detectedLanguage: { type: Type.STRING, description: "ISO 639-1 language code of the document" }
+        },
+        required: ["mappings", "detectedLanguage"]
       }
     }
   });
 
   try {
-    const rawText = response.text || "[]";
-    return JSON.parse(rawText) as FieldMapping[];
+    const rawText = response.text || "{\"mappings\":[], \"detectedLanguage\":\"en\"}";
+    return JSON.parse(rawText) as { mappings: FieldMapping[], detectedLanguage: string };
   } catch (e) {
     console.error("Failed to parse Gemini response", e);
-    return [];
+    return { mappings: [], detectedLanguage: "en" };
   }
 };
 

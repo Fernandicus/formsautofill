@@ -1,15 +1,45 @@
 import React, { useState } from 'react';
+import translate from 'translate';
 import { FieldMapping } from '../types';
 import { MappingRow } from './ReviewModal/MappingRow';
 
 interface ReviewModalProps {
   mappings: FieldMapping[];
+  fromLanguage?: string;
   onConfirm: (finalMappings: FieldMapping[]) => void;
   onCancel: () => void;
 }
 
-export const ReviewModal: React.FC<ReviewModalProps> = ({ mappings, onConfirm, onCancel }) => {
+export const ReviewModal: React.FC<ReviewModalProps> = ({ mappings, fromLanguage = 'en', onConfirm, onCancel }) => {
   const [editedMappings, setEditedMappings] = useState<FieldMapping[]>(mappings);
+  const [isTranslating, setIsTranslating] = useState(false);
+  const targetTranslationLang = "en";
+
+  const handleTranslateLabels = async (targetLang: string = "en") => {
+    setIsTranslating(true);
+    translate.engine = 'google';
+    
+    try {
+        const labelsToTranslate = editedMappings.map(m => m.label || m.pdfFieldName);
+        const batchString = labelsToTranslate.join('\n');
+        const translatedBatch = await translate(batchString, { from: fromLanguage, to: targetLang });
+        const translatedLabels = translatedBatch.split('\n').map(s => s.trim());
+        
+        const updated = editedMappings.map((m, i) => {
+            const translated = translatedLabels[i];
+            
+            if (translated) {
+                return { ...m, label: translated };
+            }
+            return m;
+        });
+        setEditedMappings(updated);
+    } catch (e) {
+        console.error('Translation error:', e);
+    } finally {
+        setIsTranslating(false);
+    }
+  };
 
   const handleChange = (index: number, newValue: string) => {
     const updated = [...editedMappings];
@@ -58,8 +88,27 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ mappings, onConfirm, o
         {/* Header */}
         <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white z-10">
           <div>
-            <h3 className="text-xl font-bold text-slate-800">Review Form Data</h3>
-            <p className="text-sm text-slate-500">Review matches and AI suggestions before filling.</p>
+            <div className="flex items-center gap-4">
+              <h3 className="text-xl font-bold text-slate-800">Review Form Data</h3>
+              {targetTranslationLang !== fromLanguage && <button
+                onClick={()=>handleTranslateLabels(targetTranslationLang)}
+                disabled={isTranslating}
+                className="text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-2"
+              >
+                {isTranslating ? (
+                  <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+                  </svg>
+                )}
+                {isTranslating ? 'Translating...' : 'Translate all labels'}
+              </button>}
+            </div>
+            <p className="text-sm text-slate-500 mt-1">Review matches and AI suggestions before filling.</p>
           </div>
           <button onClick={onCancel} className="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-100 rounded-full transition-colors">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
