@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import translate from 'translate';
 import { FieldMapping } from '../types';
 import { MappingRow } from './ReviewModal/MappingRow';
+import { ReviewSection } from './ReviewModal/ReviewSection';
 
 interface ReviewModalProps {
   mappings: FieldMapping[];
@@ -10,14 +11,39 @@ interface ReviewModalProps {
   onCancel: () => void;
 }
 
-export const ReviewModal: React.FC<ReviewModalProps> = ({ mappings, fromLanguage = 'en', onConfirm, onCancel }) => {
+const DEFAULT_LANG = "en";
+
+export const ReviewModal: React.FC<ReviewModalProps> = ({ mappings, fromLanguage = DEFAULT_LANG, onConfirm, onCancel }) => {
   const [editedMappings, setEditedMappings] = useState<FieldMapping[]>(mappings);
   const [isTranslating, setIsTranslating] = useState(false);
+  
+  const [showMissing, setShowMissing] = useState(true);
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [showMatched, setShowMatched] = useState(true);
-  const targetTranslationLang = "en";
 
-  const handleTranslateLabels = async (targetLang: string = "en") => {
+  // Derive initial indices for stable sections. This determines the category, 
+  // so fields DO NOT jump between sections as the user edits them.
+  const { missingIndices, suggestedIndices, matchedIndices } = useMemo(() => {
+    const missing: number[] = [];
+    const suggested: number[] = [];
+    const matched: number[] = [];
+
+    mappings.forEach((mapping, idx) => {
+      if (!mapping.userValue) {
+        missing.push(idx);
+      } else if (mapping.isSuggestion) {
+        suggested.push(idx);
+      } else {
+        matched.push(idx);
+      }
+    });
+
+    return { missingIndices: missing, suggestedIndices: suggested, matchedIndices: matched };
+  }, [mappings]);
+
+  const handleTranslateLabels = async (targetLang: string = DEFAULT_LANG) => {
+    if (isTranslating) return; // Guard clause
+    
     setIsTranslating(true);
     translate.engine = 'google';
     
@@ -29,90 +55,99 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ mappings, fromLanguage
         
         const updated = editedMappings.map((m, i) => {
             const translated = translatedLabels[i];
-            
-            if (translated) {
-                return { ...m, label: translated };
-            }
-            return m;
+            return translated ? { ...m, label: translated } : m;
         });
         setEditedMappings(updated);
-    } catch (e) {
-        console.error('Translation error:', e);
+    } catch (error) {
+        console.error('Translation error:', error);
     } finally {
         setIsTranslating(false);
     }
   };
 
   const handleChange = (index: number, newValue: string) => {
-    const updated = [...editedMappings];
-    updated[index] = { ...updated[index], userValue: newValue };
-    setEditedMappings(updated);
+    setEditedMappings(prev => {
+        const updated = [...prev];
+        updated[index] = { ...updated[index], userValue: newValue };
+        return updated;
+    });
   };
 
   const handleToggleInclude = (index: number) => {
-    const updated = [...editedMappings];
-    if (updated[index].userValue) {
-        updated[index].originalValue = updated[index].userValue; 
-        updated[index].userValue = '';
-    } else {
-        updated[index].userValue = updated[index].originalValue || ' ';
-    }
-    setEditedMappings(updated);
+    setEditedMappings(prev => {
+        const updated = [...prev];
+        const current = updated[index];
+        
+        if (current.userValue) {
+            // Unchecking: stash the current value so we can restore it if they check it again
+            current.originalValue = current.userValue; 
+            current.userValue = '';
+        } else {
+            // Checking: restore the original value, or provide a space if they explicitly check an empty line
+            current.userValue = current.originalValue || ' ';
+        }
+        return updated;
+    });
   };
 
   const handleAcceptAllSuggestions = () => {
-    const updated = editedMappings.map(m => {
-        if (m.isSuggestion && !m.userValue && m.originalValue) {
-            return { ...m, userValue: m.originalValue };
-        }
-        return m;
-    });
-    setEditedMappings(updated);
+    setEditedMappings(prev => prev.map(m => {
+        if (!m.isSuggestion || m.userValue || !m.originalValue) return m;
+        return { ...m, userValue: m.originalValue };
+    }));
   };
 
   const handleClearAllSuggestions = () => {
-      const updated = editedMappings.map(m => {
-          if (m.isSuggestion && m.userValue) {
-              return { ...m, originalValue: m.userValue, userValue: '' };
-          }
-          return m;
-      });
-      setEditedMappings(updated);
+      setEditedMappings(prev => prev.map(m => {
+          if (!m.isSuggestion || !m.userValue) return m;
+          return { ...m, originalValue: m.userValue, userValue: '' };
+      }));
   };
 
-  const matchedFields = editedMappings.filter(m => !m.isSuggestion);
-  const suggestedFields = editedMappings.filter(m => m.isSuggestion);
+  const renderMappingRows = (indices: number[]) => (
+      indices.map(index => (
+        <MappingRow 
+            key={`${editedMappings[index].pdfFieldName}-${index}`}
+            mapping={editedMappings[index]}
+            onToggle={() => handleToggleInclude(index)}
+            onChange={(val) => handleChange(index, val)}
+        />
+      ))
+  );
 
   return (
-    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-5xl h-full rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-white w-full max-w-5xl h-[90vh] sm:h-auto sm:max-h-[90vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-300">
         
         {/* Header */}
-        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white z-10">
+        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white z-10 shrink-0">
           <div>
             <div className="flex items-center gap-4">
-              <h3 className="text-xl font-bold text-slate-800">Review Form Data</h3>
-              {targetTranslationLang !== fromLanguage && <button
-                onClick={()=>handleTranslateLabels(targetTranslationLang)}
-                disabled={isTranslating}
-                className="text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-2"
-              >
-                {isTranslating ? (
-                  <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                ) : (
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
-                  </svg>
-                )}
-                {isTranslating ? 'Translating...' : 'Translate all labels'}
-              </button>}
+              <h3 className="text-2xl font-bold text-slate-800 tracking-tight">Review Form Data</h3>
+              {DEFAULT_LANG !== fromLanguage && (
+                <button
+                  onClick={() => handleTranslateLabels(DEFAULT_LANG)}
+                  disabled={isTranslating}
+                  className="text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-2 group disabled:opacity-50"
+                  aria-label="Translate labels"
+                >
+                  {isTranslating ? (
+                    <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : (
+                    <svg className="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+                    </svg>
+                  )}
+                  {isTranslating ? 'Translating...' : 'Translate labels'}
+                </button>
+              )}
             </div>
-            <p className="text-sm text-slate-500 mt-1">Review matches and AI suggestions before filling.</p>
+            <p className="text-sm text-slate-500 mt-1.5 font-medium">Review AI matches before generating your document.</p>
           </div>
-          <button onClick={onCancel} className="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-100 rounded-full transition-colors">
+          <button onClick={onCancel} aria-label="Close modal" className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 p-2.5 rounded-full transition-all shrink-0">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -120,109 +155,72 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ mappings, fromLanguage
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto bg-slate-50 p-6 space-y-8">
+        <div className="flex-1 overflow-y-auto bg-slate-50/50 p-6 space-y-6 scroll-smooth">
             
-            {/* Suggestions Section */}
-            {suggestedFields.length > 0 && (
-                <div >
-                    <div className=" flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                            <button 
-                                onClick={() => setShowSuggestions(!showSuggestions)}
-                                className="p-1 hover:bg-amber-100 rounded-lg transition-colors text-amber-800"
-                            >
-                                <svg className={`w-5 h-5 transition-transform duration-200 ${showSuggestions ? 'rotate-0' : '-rotate-90'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </button>
-                            <div>
-                                <h4 className="text-amber-800 font-bold flex items-center gap-2">
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    AI Suggestions ({suggestedFields.length})
-                                </h4>
-                                <p className="text-xs text-amber-700 mt-1">
-                                    Values suggested based on your profile context or AI defaults.
-                                </p>
-                            </div>
-                        </div>
-                        <div className="flex gap-2">
-                             <button onClick={handleClearAllSuggestions} className="text-xs font-semibold text-amber-700 hover:bg-amber-100 px-3 py-1.5 rounded-lg transition-colors">
-                                Reject All
-                             </button>
-                             <button onClick={handleAcceptAllSuggestions} className="text-xs font-semibold text-white bg-amber-600 hover:bg-amber-700 px-3 py-1.5 rounded-lg transition-colors shadow-sm">
-                                Accept All
-                             </button>
-                        </div>
-                    </div>
-                    {showSuggestions && (
-                        <div className="py-4 space-y-3">
-                            {editedMappings.map((m, i) => m.isSuggestion ? (
-                              <MappingRow 
-                                key={`${m.pdfFieldName}-${i}`}
-                                mapping={m}
-                                onToggle={() => handleToggleInclude(i)}
-                                onChange={(val) => handleChange(i, val)}
-                              />
-                            ) : null)}
-                        </div>
-                    )}
-                </div>
-            )}
+            <ReviewSection
+                title="Missing Data"
+                description="These fields were found in the PDF but have no matching data. Please fill them manually."
+                count={missingIndices.length}
+                isOpen={showMissing}
+                onToggle={() => setShowMissing(!showMissing)}
+                theme="rose"
+                icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>}
+            >
+                {renderMappingRows(missingIndices)}
+            </ReviewSection>
 
-            <div>
-                <div className="flex items-center gap-3 mb-3 px-1">
-                    <button 
-                        onClick={() => setShowMatched(!showMatched)}
-                        className="p-1 hover:bg-indigo-100 rounded-lg transition-colors text-indigo-600"
-                    >
-                        <svg className={`w-5 h-5 transition-transform duration-200 ${showMatched ? 'rotate-0' : '-rotate-90'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                    </button>
-                    <h4 className="text-slate-700 font-bold flex items-center gap-2">
-                        <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        Matched from Profile ({matchedFields.length})
-                    </h4>
-                </div>
-                {showMatched && (
-                    <div className="space-y-3">
-                        {matchedFields.length === 0 && (
-                            <div className="text-center py-8 text-slate-400 italic bg-white rounded-xl border border-dashed border-slate-200">
-                                No direct profile matches found.
-                            </div>
-                        )}
-                        {editedMappings.map((m, i) => !m.isSuggestion ? (
-                          <MappingRow 
-                            key={`${m.pdfFieldName}-${i}`}
-                            mapping={m}
-                            onToggle={() => handleToggleInclude(i)}
-                            onChange={(val) => handleChange(i, val)}
-                          />
-                        ) : null)}
-                    </div>
-                )}
-            </div>
+            <ReviewSection
+                title="AI Suggestions"
+                description="Values inferred from your profile context. Verify these carefully."
+                count={suggestedIndices.length}
+                isOpen={showSuggestions}
+                onToggle={() => setShowSuggestions(!showSuggestions)}
+                theme="amber"
+                icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>}
+                actions={
+                  <>
+                     <button onClick={handleClearAllSuggestions} className="text-xs font-bold text-amber-700 hover:bg-amber-100/80 px-4 py-2 rounded-lg transition-colors border border-amber-200">
+                        Reject All
+                     </button>
+                     <button onClick={handleAcceptAllSuggestions} className="text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 px-4 py-2 rounded-lg transition-colors shadow-sm shadow-amber-200">
+                        Accept All
+                     </button>
+                  </>
+                }
+            >
+                {renderMappingRows(suggestedIndices)}
+            </ReviewSection>
+
+            <ReviewSection
+                title="Matched from Profile"
+                description="Direct verified matches between the form and your stored profile data."
+                count={matchedIndices.length}
+                isOpen={showMatched}
+                onToggle={() => setShowMatched(!showMatched)}
+                theme="indigo"
+                emptyMessage="No direct profile matches were found."
+                icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+            >
+                {renderMappingRows(matchedIndices)}
+            </ReviewSection>
+
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-slate-100 flex justify-end gap-3 bg-white z-10">
+        <div className="p-6 border-t border-slate-100 flex justify-end gap-3 bg-white z-10 shrink-0">
           <button 
             onClick={onCancel}
-            className="px-5 py-2.5 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
+            className="px-6 py-2.5 text-sm font-bold text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl transition-all"
           >
             Cancel
           </button>
           <button 
             onClick={() => onConfirm(editedMappings)}
-            className="px-6 py-2.5 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-lg shadow-indigo-200 transition-all transform active:scale-[0.98] flex items-center gap-2"
+            className="px-8 py-2.5 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-lg shadow-indigo-600/30 transition-all transform active:scale-95 flex items-center gap-2"
           >
-            <span>Fill PDF</span>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            <span>Generate Document</span>
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
             </svg>
           </button>
         </div>

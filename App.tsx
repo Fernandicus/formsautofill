@@ -50,7 +50,19 @@ const App: React.FC = () => {
 
       const { mappings: generatedMappings, detectedLanguage } = await mapFieldsWithGemini(pdfFields, flattenedFields, file);
       
-      setMappings(generatedMappings);
+      const allMappings: FieldMapping[] = pdfFields.map(field => {
+        const found = generatedMappings.find(m => m.pdfFieldName === field.name);
+        if (found) return found;
+        return {
+          pdfFieldName: field.name,
+          userValue: '',
+          label: field.label || field.name,
+          isSuggestion: false,
+          confidence: 'low'
+        };
+      });
+
+      setMappings(allMappings);
       setPdfLanguage(detectedLanguage);
       setStatus({ step: 'review' });
       setShowReview(true);
