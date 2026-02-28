@@ -58,7 +58,7 @@ export const mapFieldsWithGemini = async (
     - 'detectedLanguage': Return the ISO 639-1 code for the document's language.
 
     PDF Fields List: ${JSON.stringify(pdfFields.map(f => ({ name: f.name, rect: f.rect, options: f.options })))}
-    User Data: ${JSON.stringify(userFields.map(u => ({ group: u.group, key: u.key, value: u.value })))}
+    User Data: ${JSON.stringify(userFields.map(u => ({ key: u.key, value: u.value })))}
   `;
 
   const response = await ai.models.generateContent({

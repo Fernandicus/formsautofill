@@ -1,6 +1,6 @@
 import React from 'react';
-import { DataGroup } from '../types';
-import { GroupCard } from './DataProfile/GroupCard';
+import { DataGroup } from '../../types';
+import { GroupCard } from './GroupCard';
 
 interface DataProfileProps {
   groups: DataGroup[];
