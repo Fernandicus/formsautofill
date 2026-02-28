@@ -1,11 +1,9 @@
-import React, { useState, useRef } from 'react';
+import React, { useRef } from 'react';
 import { DataProfile } from './components/DataProfile';
 import { ReviewModal } from './components/ReviewModal';
 import { StatusOverlay } from './components/common/StatusOverlay';
-import { extractFormFields, fillPdf } from './services/pdfService';
-import { mapFieldsWithGemini } from './services/geminiService';
-import { FieldMapping, ProcessingStatus, UserField } from './types';
 import { useDataGroups } from './hooks/useDataGroups';
+import { usePdfProcessing } from './hooks/usePdfProcessing';
 
 const App: React.FC = () => {
   const {
@@ -17,11 +15,16 @@ const App: React.FC = () => {
     saveScrapedFields
   } = useDataGroups();
 
-  const [status, setStatus] = useState<ProcessingStatus>({ step: 'idle' });
-  const [mappings, setMappings] = useState<FieldMapping[]>([]);
-  const [pdfLanguage, setPdfLanguage] = useState<string>('en');
-  const [showReview, setShowReview] = useState(false);
-  const [currentFile, setCurrentFile] = useState<File | null>(null);
+  const {
+    status,
+    mappings,
+    pdfLanguage,
+    showReview,
+    handleFileChange,
+    handleConfirmFill,
+    closeStatusModal,
+    cancelReview,
+  } = usePdfProcessing({ groups, saveScrapedFields });
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -29,91 +32,12 @@ const App: React.FC = () => {
     fileInputRef.current?.click();
   };
 
-  const processPdf = async (file: File) => {
-    try {
-      setStatus({ step: 'analyzing_pdf', message: 'Scanning PDF fields...' });
-      const pdfFields = await extractFormFields(file);
-
-      if (pdfFields.length === 0) {
-        setStatus({ step: 'error', message: 'No fillable forms found in this PDF.' });
-        return;
-      }
-
-      setStatus({ step: 'mapping_ai', message: 'Gemini is thinking...' });
-      
-      const flattenedFields: UserField[] = groups.flatMap(group => 
-        group.fields.map(field => ({
-            id: field.id,
-            key: `${group.name}: ${field.key}`,
-            value: field.value
-        }))
-      );
-
-      const { mappings: generatedMappings, detectedLanguage } = await mapFieldsWithGemini(pdfFields, flattenedFields, file);
-      
-
-      const allMappings: FieldMapping[] = pdfFields.map(field => {
-        const found = generatedMappings.find(m => m.pdfFieldName === field.name);
-        if (found) return found;
-        return {
-          pdfFieldName: field.name,
-          userValue: '',
-          label: field.label || field.name,
-          isSuggestion: false,
-          confidence: 'low'
-        };
-      });
-
-      setMappings(allMappings);
-      setPdfLanguage(detectedLanguage);
-      setStatus({ step: 'review' });
-      setShowReview(true);
-
-    } catch (error) {
-      console.error(error);
-      setStatus({ step: 'error', message: 'An error occurred during processing.' });
-    }
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setCurrentFile(file);
-      setStatus({ step: 'idle' });
-      processPdf(file);
+      handleFileChange(file);
       e.target.value = '';
     }
-  };
-
-  const handleConfirmFill = async (finalMappings: FieldMapping[], newFieldsToSave?: UserField[]) => {
-    if (!currentFile) return;
-    setShowReview(false);
-
-    if (newFieldsToSave && newFieldsToSave.length > 0) {
-      saveScrapedFields(newFieldsToSave);
-    }
-
-    setStatus({ step: 'filling', message: 'Generating your PDF...' });
-
-    try {
-      const pdfBytes = await fillPdf(currentFile, finalMappings);
-      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      const win = window.open(url, '_blank');
-
-      setStatus({ 
-          step: 'completed', 
-          message: win ? 'PDF Ready! Opened in new tab.' : 'PDF Ready! Click below to view.',
-          downloadUrl: url
-      });
-    } catch (error) {
-      console.error(error);
-      setStatus({ step: 'error', message: 'Failed to write to PDF.' });
-    }
-  };
-
-  const closeStatusModal = () => {
-    setStatus({ step: 'idle' });
   };
 
   return (
@@ -147,7 +71,7 @@ const App: React.FC = () => {
             <input 
               type="file" 
               ref={fileInputRef} 
-              onChange={handleFileChange} 
+              onChange={onFileChange} 
               accept="application/pdf" 
               className="hidden" 
             />
@@ -170,7 +94,7 @@ const App: React.FC = () => {
           mappings={mappings} 
           fromLanguage={pdfLanguage}
           onConfirm={handleConfirmFill} 
-          onCancel={() => { setShowReview(false); setStatus({ step: 'idle' }); }} 
+          onCancel={cancelReview} 
         />
       )}
 

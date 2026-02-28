@@ -1,9 +1,9 @@
-import React, { useState, useMemo } from 'react';
-import translate from 'translate';
+import React from 'react';
 import { FieldMapping, UserField } from '../types';
 import { MappingRow } from './ReviewModal/MappingRow';
 import { ReviewSection } from './ReviewModal/ReviewSection';
-import { FieldItem } from './DataProfile/FieldItem';
+import { SaveDataPrompt } from './ReviewModal/SaveDataPrompt';
+import { useReviewMappings } from '../hooks/useReviewMappings';
 
 interface ReviewModalProps {
   mappings: FieldMapping[];
@@ -15,119 +15,35 @@ interface ReviewModalProps {
 const DEFAULT_LANG = "en";
 
 export const ReviewModal: React.FC<ReviewModalProps> = ({ mappings, fromLanguage = DEFAULT_LANG, onConfirm, onCancel }) => {
-  const [editedMappings, setEditedMappings] = useState<FieldMapping[]>(mappings);
-  const [isTranslating, setIsTranslating] = useState(false);
-  
-  const [showMissing, setShowMissing] = useState(true);
-  const [showSuggestions, setShowSuggestions] = useState(true);
-  const [showMatched, setShowMatched] = useState(true);
-
-  const [showSavePrompt, setShowSavePrompt] = useState(false);
-  const [fieldsToSave, setFieldsToSave] = useState<UserField[]>([]);
-
-  // Derive initial indices for stable sections. This determines the category, 
-  // so fields DO NOT jump between sections as the user edits them.
-  const { missingIndices, suggestedIndices, matchedIndices } = useMemo(() => {
-    const missing: number[] = [];
-    const suggested: number[] = [];
-    const matched: number[] = [];
-
-    mappings.forEach((mapping, idx) => {
-      if (!mapping.userValue) {
-        missing.push(idx);
-      } else if (mapping.isSuggestion) {
-        suggested.push(idx);
-      } else {
-        matched.push(idx);
-      }
-    });
-
-    return { missingIndices: missing, suggestedIndices: suggested, matchedIndices: matched };
-  }, [mappings]);
-
-  const handleTranslateLabels = async (targetLang: string = DEFAULT_LANG) => {
-    if (isTranslating) return; // Guard clause
-    
-    setIsTranslating(true);
-    translate.engine = 'google';
-    
-    try {
-        const labelsToTranslate = editedMappings.map(m => m.label || m.pdfFieldName);
-        const batchString = labelsToTranslate.join('\n');
-        const translatedBatch = await translate(batchString, { from: fromLanguage, to: targetLang });
-        const translatedLabels = translatedBatch.split('\n').map(s => s.trim());
-        
-        const updated = editedMappings.map((m, i) => {
-            const translated = translatedLabels[i];
-            return translated ? { ...m, label: translated } : m;
-        });
-        setEditedMappings(updated);
-    } catch (error) {
-        console.error('Translation error:', error);
-    } finally {
-        setIsTranslating(false);
-    }
-  };
-
-  const handleChange = (index: number, newValue: string) => {
-    setEditedMappings(prev => {
-        const updated = [...prev];
-        updated[index] = { ...updated[index], userValue: newValue };
-        return updated;
-    });
-  };
-
-  const handleToggleInclude = (index: number) => {
-    setEditedMappings(prev => {
-        const updated = [...prev];
-        const current = updated[index];
-        
-        if (current.userValue) {
-            // Unchecking: stash the current value so we can restore it if they check it again
-            current.originalValue = current.userValue; 
-            current.userValue = '';
-        } else {
-            // Checking: restore the original value, or provide a space if they explicitly check an empty line
-            current.userValue = current.originalValue || ' ';
-        }
-        return updated;
-    });
-  };
-
-  const handleAcceptAllSuggestions = () => {
-    setEditedMappings(prev => prev.map(m => {
-        if (!m.isSuggestion || m.userValue || !m.originalValue) return m;
-        return { ...m, userValue: m.originalValue };
-    }));
-  };
-
-  const handleClearAllSuggestions = () => {
-      setEditedMappings(prev => prev.map(m => {
-          if (!m.isSuggestion || !m.userValue) return m;
-          return { ...m, originalValue: m.userValue, userValue: '' };
-      }));
-  };
-
-  const handleGenerateClick = () => {
-    // Collect filled missing fields
-    const newlyFilled: UserField[] = missingIndices
-      .filter(idx => {
-         const mapping = editedMappings[idx];
-         return mapping.userValue && mapping.userValue.trim() !== '';
-      })
-      .map(idx => ({
-         id: crypto.randomUUID(),
-         key: editedMappings[idx].label || editedMappings[idx].pdfFieldName,
-         value: editedMappings[idx].userValue
-      }));
-
-    if (newlyFilled.length > 0) {
-      setFieldsToSave(newlyFilled);
-      setShowSavePrompt(true);
-    } else {
-      onConfirm(editedMappings);
-    }
-  };
+  const {
+    editedMappings,
+    isTranslating,
+    showMissing,
+    setShowMissing,
+    showSuggestions,
+    setShowSuggestions,
+    showMatched,
+    setShowMatched,
+    showSavePrompt,
+    fieldsToSave,
+    missingIndices,
+    suggestedIndices,
+    matchedIndices,
+    handleTranslateLabels,
+    handleChange,
+    handleToggleInclude,
+    handleAcceptAllSuggestions,
+    handleClearAllSuggestions,
+    handleGenerateClick,
+    confirmSaveAndGenerate,
+    updateFieldToSave,
+    removeFieldToSave
+  } = useReviewMappings({
+    initialMappings: mappings,
+    fromLanguage,
+    onConfirm,
+    defaultLang: DEFAULT_LANG
+  });
 
   const renderMappingRows = (indices: number[]) => (
       indices.map(index => (
@@ -142,51 +58,13 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ mappings, fromLanguage
 
   if (showSavePrompt) {
     return (
-      <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div className="bg-white w-full max-w-md max-h-[90vh] flex flex-col rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 text-center">
-            <div className="p-6 shrink-0 pb-4">
-                <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-                    </svg>
-                </div>
-                <h3 className="text-xl font-bold text-slate-800 tracking-tight mb-2">Save New Data?</h3>
-                <p className="text-sm text-slate-500">You filled out <span className="font-bold text-indigo-600">{fieldsToSave.length}</span> new field(s). Modify their labels below if needed, and store them for future use.</p>
-            </div>
-
-            <div className="overflow-y-auto px-6 pb-2 space-y-3 text-left w-full custom-scrollbar">
-              {fieldsToSave.map((field, idx) => (
-                <FieldItem 
-                  key={field.id}
-                  field={field}
-                  onUpdate={(key, value) => {
-                      const updated = [...fieldsToSave];
-                      updated[idx] = { ...updated[idx], key, value };
-                      setFieldsToSave(updated);
-                  }}
-                  onRemove={() => {
-                      setFieldsToSave(prev => prev.filter(f => f.id !== field.id));
-                  }}
-                />
-              ))}
-            </div>
-
-            <div className="p-6 shrink-0 pt-4 flex gap-3 justify-center bg-white border-t border-slate-50">
-                <button 
-                  onClick={() => onConfirm(editedMappings)}
-                  className="px-5 py-2.5 text-sm font-bold text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl transition-all"
-                >
-                  No, just generate
-                </button>
-                <button 
-                  onClick={() => onConfirm(editedMappings, fieldsToSave)}
-                  className="px-5 py-2.5 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-lg shadow-indigo-600/30 transition-all transform active:scale-95 flex items-center gap-2"
-                >
-                  Yes, store it
-                </button>
-            </div>
-        </div>
-      </div>
+      <SaveDataPrompt 
+        fieldsToSave={fieldsToSave}
+        editedMappings={editedMappings}
+        onConfirm={confirmSaveAndGenerate}
+        updateFieldToSave={updateFieldToSave}
+        removeFieldToSave={removeFieldToSave}
+      />
     );
   }
 
