@@ -50,6 +50,7 @@ const App: React.FC = () => {
 
       const { mappings: generatedMappings, detectedLanguage } = await mapFieldsWithGemini(pdfFields, flattenedFields, file);
       
+
       const allMappings: FieldMapping[] = pdfFields.map(field => {
         const found = generatedMappings.find(m => m.pdfFieldName === field.name);
         if (found) return found;

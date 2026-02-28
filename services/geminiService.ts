@@ -39,13 +39,16 @@ export const mapFieldsWithGemini = async (
        - Use the 'rect' coordinates to locate the field on the page.
        - Read the text label NEXT TO or ABOVE the field to understand its meaning (e.g. "Name:", "City:", "Email:").
        - Do NOT rely solely on the internal 'name' (e.g. "Text1") as it may be cryptic.
-    4. Identify the predominant language of the PDF document and return its ISO 639-1 code (e.g., "en", "es", "fr").
+    2. Identify the predominant language of the PDF document and return its ISO 639-1 code (e.g., "en", "es", "fr").
+    3. Return also the unmatched fields.
+    4. For the unmatched fields, return an empty string "" for the userValue.
 
     Rules:
     - If the visual label says "Name", find the User Data for Name.
     - If the visual label says "City", find the User Data for City.
     - If the visual label says "Email", find the User Data for Email.
-    - Contextual Inference: If User Data has "Car: Tesla", and visual field says "Vehicle", map it.
+    - If the visual label is not very specific, try to read the text around the field to get more context to understand what it really represents.
+    - Contextual Inference and Synonyms: For example, If User Data has "Car: Tesla", and visual field says "Vehicle", map it.
     - Checkboxes: Return "true", "yes", "checked" if applicable.
     
     IMPORTANT:
