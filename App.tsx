@@ -8,12 +8,13 @@ import { FieldMapping, ProcessingStatus, UserField } from './types';
 import { useDataGroups } from './hooks/useDataGroups';
 
 const App: React.FC = () => {
-  const { 
+  const {
     groups, 
     addGroup, 
     updateGroup, 
     deleteGroup, 
-    duplicateGroup 
+    duplicateGroup,
+    saveScrapedFields
   } = useDataGroups();
 
   const [status, setStatus] = useState<ProcessingStatus>({ step: 'idle' });
@@ -84,9 +85,14 @@ const App: React.FC = () => {
     }
   };
 
-  const handleConfirmFill = async (finalMappings: FieldMapping[]) => {
+  const handleConfirmFill = async (finalMappings: FieldMapping[], newFieldsToSave?: UserField[]) => {
     if (!currentFile) return;
     setShowReview(false);
+
+    if (newFieldsToSave && newFieldsToSave.length > 0) {
+      saveScrapedFields(newFieldsToSave);
+    }
+
     setStatus({ step: 'filling', message: 'Generating your PDF...' });
 
     try {

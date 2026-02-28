@@ -80,6 +80,38 @@ export const useDataGroups = () => {
     }));
   }, [setGroups]);
 
+  const saveScrapedFields = useCallback((newFieldsToSave: UserField[]) => {
+    if (!newFieldsToSave.length) return;
+
+    setGroups(prev => {
+      const existingGroupIndex = prev.findIndex(g => g.name === 'Saved Data');
+      
+      const newFields: UserField[] = newFieldsToSave.map(f => ({
+        id: crypto.randomUUID(),
+        key: f.key,
+        value: f.value
+      }));
+
+      if (existingGroupIndex >= 0) {
+        const updatedGroups = [...prev];
+        updatedGroups[existingGroupIndex] = {
+           ...updatedGroups[existingGroupIndex],
+           fields: [...updatedGroups[existingGroupIndex].fields, ...newFields]
+        };
+        return updatedGroups;
+      } else {
+        const newGroup: DataGroup = {
+          id: crypto.randomUUID(),
+          name: 'Saved Data',
+          fields: newFields,
+          isExpanded: true
+        };
+        return [...prev, newGroup];
+      }
+    });
+
+  }, [setGroups]);
+
   return {
     groups,
     addGroup,
@@ -88,6 +120,7 @@ export const useDataGroups = () => {
     duplicateGroup,
     addFieldToGroup,
     updateFieldInGroup,
-    removeFieldFromGroup
+    removeFieldFromGroup,
+    saveScrapedFields
   };
 };
