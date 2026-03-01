@@ -1,5 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { PdfFieldInfo, UserField, FieldMapping } from "@/app/shared/types";
+import { logger } from "@/app/shared/utils/logger";
 
 const GEMINI_MODEL = 'gemini-3-flash-preview';
 
@@ -99,7 +100,7 @@ export const mapFieldsWithGemini = async (
     const rawText = response.text || "{\"mappings\":[], \"detectedLanguage\":\"en\"}";
     return JSON.parse(rawText) as { mappings: FieldMapping[], detectedLanguage: string };
   } catch (e) {
-    console.error("Failed to parse Gemini response", e);
+    logger.error('GEMINI_API', 'Failed to parse Gemini response', e);
     return { mappings: [], detectedLanguage: "en" };
   }
 };
@@ -151,13 +152,14 @@ export const extractDataFromDocument = async (file: File): Promise<UserField[]> 
   try {
     const rawText = response.text || "[]";
     const data = JSON.parse(rawText) as {key: string, value: string}[];
+    logger.info('DOCUMENT_SCRAPING', `Extracted ${data.length} fields from document.`);
     return data.map(item => ({
         id: crypto.randomUUID(),
         key: item.key,
         value: item.value
     }));
   } catch (e) {
-    console.error("Failed to parse extracted data", e);
+    logger.error('DOCUMENT_SCRAPING', 'Failed to parse extracted data', e);
     return [];
   }
 };

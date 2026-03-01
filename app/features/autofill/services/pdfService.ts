@@ -1,5 +1,6 @@
 import { PDFDocument, PDFTextField, PDFCheckBox, PDFDropdown, PDFRadioGroup } from 'pdf-lib';
 import { PdfFieldInfo, FieldMapping } from '@/app/shared/types';
+import { logger } from '@/app/shared/utils/logger';
 
 const TRUTHY_VALUES = ['true', 'yes', 'checked', 'x', '1', 'on'];
 const FALSY_VALUES = ['false', 'no', 'unchecked', '0', 'off'];
@@ -25,6 +26,7 @@ const getFieldRect = (field: any) => {
 
 export const extractFormFields = async (file: File): Promise<PdfFieldInfo[]> => {
   const arrayBuffer = await file.arrayBuffer();
+  logger.info('PDF_SERVICE', 'Extracting fields from PDF document...', { fileName: file.name });
   const pdfDoc = await PDFDocument.load(arrayBuffer);
   const form = pdfDoc.getForm();
   const fields = form.getFields();
@@ -57,8 +59,10 @@ export const extractFormFields = async (file: File): Promise<PdfFieldInfo[]> => 
 
 export const fillPdf = async (file: File, mappings: FieldMapping[]): Promise<Uint8Array> => {
   const arrayBuffer = await file.arrayBuffer();
+  logger.info('PDF_SERVICE', 'Loading PDF for filling...');
   const pdfDoc = await PDFDocument.load(arrayBuffer);
   const form = pdfDoc.getForm();
+  let fillCount = 0;
 
   for (const map of mappings) {
     if (!map.userValue) continue;
@@ -68,14 +72,17 @@ export const fillPdf = async (file: File, mappings: FieldMapping[]): Promise<Uin
       
       if (field instanceof PDFTextField) {
         field.setText(map.userValue);
+        fillCount++;
       }
       
       else if (field instanceof PDFCheckBox) {
         const val = map.userValue.toLowerCase().trim();
         if (TRUTHY_VALUES.includes(val)) {
           field.check();
+          fillCount++;
         } else if (FALSY_VALUES.includes(val)) {
           field.uncheck();
+          fillCount++;
         }
       }
       
@@ -86,20 +93,23 @@ export const fillPdf = async (file: File, mappings: FieldMapping[]): Promise<Uin
         // Try exact match first, then case-insensitive
         if (options.includes(map.userValue)) {
           field.select(map.userValue);
+          fillCount++;
         } else {
           const match = options.find(o => o.toLowerCase() === lowerValue);
           if (match) {
             field.select(match);
+            fillCount++;
           } else if (field instanceof PDFDropdown) {
-            console.warn(`Option "${map.userValue}" not found in dropdown "${map.pdfFieldName}"`);
+            logger.warn('PDF_FILL', `Option "${map.userValue}" not found for dropdown "${map.pdfFieldName}"`);
           }
         }
       }
 
     } catch (e) {
-      console.warn(`Could not fill field ${map.pdfFieldName}:`, e);
+      logger.warn('PDF_FILL', `Could not fill field ${map.pdfFieldName}`, e);
     }
   }
 
+  logger.info('PDF_SERVICE', `Filled ${fillCount} fields in the document.`);
   return await pdfDoc.save();
 };
