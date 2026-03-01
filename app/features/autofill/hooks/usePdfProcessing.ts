@@ -18,6 +18,10 @@ export const usePdfProcessing = ({ groups, saveScrapedFields }: UsePdfProcessing
   const processPdf = useCallback(async (file: File) => {
     try {
       setStatus({ step: 'analyzing_pdf', message: 'Scanning PDF fields...' });
+      
+      // Yield to main thread so UI can paint the status overlay
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
       const pdfFields = await extractFormFields(file);
 
       if (pdfFields.length === 0) {
@@ -26,6 +30,9 @@ export const usePdfProcessing = ({ groups, saveScrapedFields }: UsePdfProcessing
       }
 
       setStatus({ step: 'mapping_ai', message: 'Gemini is thinking...' });
+      
+      // Yield to main thread so UI can paint the status overlay
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       const flattenedFields: UserField[] = groups.flatMap(group => 
         group.fields.map(field => ({
