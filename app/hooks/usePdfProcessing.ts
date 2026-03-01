@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { FieldMapping, ProcessingStatus, UserField } from '../../types';
+import { FieldMapping, ProcessingStatus, UserField } from '../types';
 import { extractFormFields, fillPdf } from '../services/pdfService';
 import { mapFieldsWithGemini } from '../services/geminiService';
 

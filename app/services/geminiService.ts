@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import { PdfFieldInfo, UserField, FieldMapping } from "../../types";
+import { PdfFieldInfo, UserField, FieldMapping } from "../types";
 
 const GEMINI_MODEL = 'gemini-3-flash-preview';
 

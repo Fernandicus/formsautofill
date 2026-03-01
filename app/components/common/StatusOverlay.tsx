@@ -1,5 +1,5 @@
 import React from 'react';
-import { ProcessingStatus } from '../../../types';
+import { ProcessingStatus } from '../../types';
 
 interface StatusOverlayProps {
   status: ProcessingStatus;

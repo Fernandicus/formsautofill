@@ -1,5 +1,5 @@
 import React from 'react';
-import { FieldMapping, UserField } from '../../../types';
+import { FieldMapping, UserField } from '../../types';
 import { MappingRow } from './MappingRow';
 import { ReviewSection } from './ReviewSection';
 import { SaveDataPrompt } from './SaveDataPrompt';

@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { DataGroup } from '../../../types';
+import { DataGroup } from '../../types';
 import { extractDataFromDocument } from '../../services/geminiService';
 import { FieldItem } from './FieldItem';
 import { AddFieldForm } from './AddFieldForm';

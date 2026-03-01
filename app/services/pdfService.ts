@@ -1,5 +1,5 @@
 import { PDFDocument, PDFTextField, PDFCheckBox, PDFDropdown, PDFRadioGroup } from 'pdf-lib';
-import { PdfFieldInfo, FieldMapping } from '../../types';
+import { PdfFieldInfo, FieldMapping } from '../types';
 
 const TRUTHY_VALUES = ['true', 'yes', 'checked', 'x', '1', 'on'];
 const FALSY_VALUES = ['false', 'no', 'unchecked', '0', 'off'];
