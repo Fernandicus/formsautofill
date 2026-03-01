@@ -1,5 +1,5 @@
 import React from 'react';
-import { ProcessingStatus } from '../../types';
+import { ProcessingStatus } from '@/app/shared/types';
 
 type StatusOverlayProps = {
   status: ProcessingStatus;

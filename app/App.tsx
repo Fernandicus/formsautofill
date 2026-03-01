@@ -1,9 +1,9 @@
 import React, { useRef } from 'react';
-import { DataProfile } from './components/DataProfile';
-import { ReviewModal } from './components/ReviewModal';
-import { StatusOverlay } from './components/common/StatusOverlay';
-import { useDataGroups } from './hooks/useDataGroups';
-import { usePdfProcessing } from './hooks/usePdfProcessing';
+import { DataProfile } from './features/profile/components/DataProfile';
+import { ReviewModal } from './features/autofill/components/ReviewModal';
+import { StatusOverlay } from './shared/components/StatusOverlay';
+import { useDataGroups } from './features/profile/hooks/useDataGroups';
+import { usePdfProcessing } from './features/autofill/hooks/usePdfProcessing';
 
 const App: React.FC = () => {
   const {

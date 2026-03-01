@@ -1,5 +1,5 @@
 import React from 'react';
-import { DataGroup } from '../../types';
+import { DataGroup } from '@/app/shared/types';
 import { GroupCard } from './GroupCard';
 
 type DataProfileProps = {

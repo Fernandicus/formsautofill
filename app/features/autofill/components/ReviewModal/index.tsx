@@ -1,9 +1,9 @@
 import React from 'react';
-import { FieldMapping, UserField } from '../../types';
+import { FieldMapping, UserField } from '@/app/shared/types';
 import { MappingRow } from './MappingRow';
 import { ReviewSection } from './ReviewSection';
 import { SaveDataPrompt } from './SaveDataPrompt';
-import { useReviewMappings } from '../../hooks/useReviewMappings';
+import { useReviewMappings } from '@/app/features/autofill/hooks/useReviewMappings';
 
 type ReviewModalProps = {
   mappings: FieldMapping[];

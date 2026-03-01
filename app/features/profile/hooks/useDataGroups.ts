@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
-import { DataGroup, UserField } from '../types';
-import { INITIAL_DATA_GROUPS } from '../constants';
-import { useLocalStorage } from './useLocalStorage';
+import { DataGroup, UserField } from '@/app/shared/types';
+import { INITIAL_DATA_GROUPS } from '@/app/shared/constants';
+import { useLocalStorage } from '@/app/shared/hooks/useLocalStorage';
 
 export const useDataGroups = () => {
   const [groups, setGroups] = useLocalStorage<DataGroup[]>('autoFillDataGroups', INITIAL_DATA_GROUPS);

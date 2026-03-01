@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
-import { FieldMapping, ProcessingStatus, UserField } from '../types';
-import { extractFormFields, fillPdf } from '../services/pdfService';
-import { mapFieldsWithGemini } from '../services/geminiService';
+import { FieldMapping, ProcessingStatus, UserField } from '@/app/shared/types';
+import { extractFormFields, fillPdf } from '@/app/features/autofill/services/pdfService';
+import { mapFieldsWithGemini } from '@/app/features/autofill/services/geminiService';
 
 type UsePdfProcessingProps = {
   groups: { name: string; fields: UserField[] }[];

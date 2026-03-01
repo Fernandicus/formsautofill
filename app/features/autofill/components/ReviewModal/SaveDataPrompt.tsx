@@ -1,6 +1,6 @@
 import React from 'react';
-import { FieldMapping, UserField } from '../../types';
-import { FieldItem } from '../DataProfile/FieldItem';
+import { FieldMapping, UserField } from '@/app/shared/types';
+import { FieldItem } from '@/app/features/profile/components/DataProfile/FieldItem';
 
 type SaveDataPromptProps = {
   fieldsToSave: UserField[];

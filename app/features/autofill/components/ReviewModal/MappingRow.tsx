@@ -1,5 +1,5 @@
 import React from 'react';
-import { FieldMapping } from '../../types';
+import { FieldMapping } from '@/app/shared/types';
 
 type MappingRowProps = {
   mapping: FieldMapping;

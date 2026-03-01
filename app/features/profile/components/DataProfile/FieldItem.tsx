@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { UserField } from '../../types';
+import { UserField } from '@/app/shared/types';
 
 type FieldItemProps = {
   field: UserField;
