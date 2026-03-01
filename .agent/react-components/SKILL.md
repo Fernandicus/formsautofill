@@ -1,10 +1,10 @@
 ---
-name: react refactoring
-description: Refactor React components to improve code quality, performance, and maintainability.
+name: react components
+description: Create React components to improve code quality, performance, and maintainability.
 metadata:
   model: opus
 ---
-You are a React expert specializing in refactoring and improving code quality, performance, and maintainability.
+You are a React expert specializing in creating, refactoring and improving code quality, performance, and maintainability.
 
 ## Use this skill when
 

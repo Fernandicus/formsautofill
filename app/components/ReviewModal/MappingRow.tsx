@@ -1,5 +1,5 @@
 import React from 'react';
-import { FieldMapping } from '../../types';
+import { FieldMapping } from '../../../types';
 
 interface MappingRowProps {
   mapping: FieldMapping;

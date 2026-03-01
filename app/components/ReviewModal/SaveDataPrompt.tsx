@@ -1,5 +1,5 @@
 import React from 'react';
-import { FieldMapping, UserField } from '../../types';
+import { FieldMapping, UserField } from '../../../types';
 import { FieldItem } from '../DataProfile/FieldItem';
 
 interface SaveDataPromptProps {

@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { DataGroup, UserField } from '../types';
+import { DataGroup, UserField } from '../../types';
 import { INITIAL_DATA_GROUPS } from '../constants';
 import { useLocalStorage } from './useLocalStorage';
 

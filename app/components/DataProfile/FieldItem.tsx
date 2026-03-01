@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { UserField } from '../../types';
+import { UserField } from '../../../types';
 
 interface FieldItemProps {
   field: UserField;

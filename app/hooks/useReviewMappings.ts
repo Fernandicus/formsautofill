@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
 import translate from 'translate';
-import { FieldMapping, UserField } from '../types';
+import { FieldMapping, UserField } from '../../types';
 
 interface UseReviewMappingsProps {
   initialMappings: FieldMapping[];
