@@ -1,6 +1,6 @@
 ---
-name: react components
-description: Create React components to improve code quality, performance, and maintainability.
+name: React Architecture
+description: Senior-level guidelines for building scalable, high-performance React applications using Composition, Custom Hooks, and Feature-First architecture
 metadata:
   model: opus
 ---
@@ -42,7 +42,7 @@ You are a React expert specializing in creating, refactoring and improving code 
 
 ### 5. Folder Structure (The "Feature-First" Rule)
 Organize by feature, not by type. Example:
-`features/Auth/components/`, `features/Auth/hooks/`, `features/Auth/api/`, `features/Auth/styles/`.
+`app/Auth/components/`, `app/Auth/hooks/`, `app/Auth/api/`, `app/Auth/styles/`.
 
 ### 6. Reliability & Testing
 - **Error Boundaries:** Wrap critical components in Error Boundaries to prevent app crashes.
