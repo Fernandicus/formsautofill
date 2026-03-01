@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 
-interface AddFieldFormProps {
+type AddFieldFormProps = {
   onAdd: (key: string, value: string) => void;
-}
+};
 
 export const AddFieldForm: React.FC<AddFieldFormProps> = ({ onAdd }) => {
   const [addKey, setAddKey] = useState('');

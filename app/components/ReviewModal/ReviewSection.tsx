@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react';
 
-interface ReviewSectionProps {
+type ReviewSectionProps = {
   title: string;
   description?: string;
   count: number;
@@ -11,7 +11,7 @@ interface ReviewSectionProps {
   actions?: ReactNode;
   children: ReactNode;
   emptyMessage?: string;
-}
+};
 
 const THEME_STYLES = {
   rose: {

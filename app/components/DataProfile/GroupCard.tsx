@@ -4,12 +4,12 @@ import { extractDataFromDocument } from '../../services/geminiService';
 import { FieldItem } from './FieldItem';
 import { AddFieldForm } from './AddFieldForm';
 
-interface GroupCardProps { 
+type GroupCardProps = { 
   group: DataGroup; 
   updateGroup: (g: DataGroup) => void;
   deleteGroup: (id: string) => void;
   duplicateGroup: (id: string) => void;
-}
+};
 
 export const GroupCard: React.FC<GroupCardProps> = ({ 
   group, 

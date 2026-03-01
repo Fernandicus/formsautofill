@@ -1,11 +1,11 @@
 import React from 'react';
 import { FieldMapping } from '../../types';
 
-interface MappingRowProps {
+type MappingRowProps = {
   mapping: FieldMapping;
   onToggle: () => void;
   onChange: (value: string) => void;
-}
+};
 
 export const MappingRow: React.FC<MappingRowProps> = ({ mapping, onToggle, onChange }) => {
   const { userValue, isSuggestion, label, pdfFieldName } = mapping;

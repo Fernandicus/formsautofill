@@ -2,13 +2,13 @@ import React from 'react';
 import { FieldMapping, UserField } from '../../types';
 import { FieldItem } from '../DataProfile/FieldItem';
 
-interface SaveDataPromptProps {
+type SaveDataPromptProps = {
   fieldsToSave: UserField[];
   editedMappings: FieldMapping[];
   onConfirm: (withSave: boolean) => void;
   updateFieldToSave: (index: number, key: string, value: string) => void;
   removeFieldToSave: (id: string) => void;
-}
+};
 
 export const SaveDataPrompt: React.FC<SaveDataPromptProps> = ({
   fieldsToSave,

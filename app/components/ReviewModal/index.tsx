@@ -5,12 +5,12 @@ import { ReviewSection } from './ReviewSection';
 import { SaveDataPrompt } from './SaveDataPrompt';
 import { useReviewMappings } from '../../hooks/useReviewMappings';
 
-interface ReviewModalProps {
+type ReviewModalProps = {
   mappings: FieldMapping[];
   fromLanguage?: string;
   onConfirm: (finalMappings: FieldMapping[], newFieldsToSave?: UserField[]) => void;
   onCancel: () => void;
-}
+};
 
 const DEFAULT_LANG = "en";
 

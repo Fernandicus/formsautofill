@@ -3,10 +3,10 @@ import { FieldMapping, ProcessingStatus, UserField } from '../types';
 import { extractFormFields, fillPdf } from '../services/pdfService';
 import { mapFieldsWithGemini } from '../services/geminiService';
 
-interface UsePdfProcessingProps {
+type UsePdfProcessingProps = {
   groups: { name: string; fields: UserField[] }[];
   saveScrapedFields: (fields: UserField[]) => void;
-}
+};
 
 export const usePdfProcessing = ({ groups, saveScrapedFields }: UsePdfProcessingProps) => {
   const [status, setStatus] = useState<ProcessingStatus>({ step: 'idle' });

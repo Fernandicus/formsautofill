@@ -2,12 +2,12 @@ import { useState, useMemo, useCallback } from 'react';
 import translate from 'translate';
 import { FieldMapping, UserField } from '../types';
 
-interface UseReviewMappingsProps {
+type UseReviewMappingsProps = {
   initialMappings: FieldMapping[];
   fromLanguage: string;
   onConfirm: (finalMappings: FieldMapping[], newFieldsToSave?: UserField[]) => void;
   defaultLang?: string;
-}
+};
 
 export const useReviewMappings = ({ 
   initialMappings, 

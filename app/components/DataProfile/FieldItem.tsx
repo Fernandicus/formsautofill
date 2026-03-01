@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { UserField } from '../../types';
 
-interface FieldItemProps {
+type FieldItemProps = {
   field: UserField;
   onUpdate: (key: string, value: string) => void;
   onRemove: () => void;
-}
+};
 
 export const FieldItem: React.FC<FieldItemProps> = ({ field, onUpdate, onRemove }) => {
   const [isEditing, setIsEditing] = useState(false);

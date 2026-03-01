@@ -2,13 +2,13 @@ import React from 'react';
 import { DataGroup } from '../../types';
 import { GroupCard } from './GroupCard';
 
-interface DataProfileProps {
+type DataProfileProps = {
   groups: DataGroup[];
   addGroup: () => void;
   updateGroup: (g: DataGroup) => void;
   deleteGroup: (id: string) => void;
   duplicateGroup: (id: string) => void;
-}
+};
 
 export const DataProfile: React.FC<DataProfileProps> = ({ 
   groups, 

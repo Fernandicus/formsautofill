@@ -1,10 +1,10 @@
 import React from 'react';
 import { ProcessingStatus } from '../../types';
 
-interface StatusOverlayProps {
+type StatusOverlayProps = {
   status: ProcessingStatus;
   onClose: () => void;
-}
+};
 
 export const StatusOverlay: React.FC<StatusOverlayProps> = ({ status, onClose }) => {
   const isProcessing = ['analyzing_pdf', 'mapping_ai', 'filling'].includes(status.step);
