@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { DataGroup } from '@/app/shared/types';
-import { extractDataFromDocument } from '@/app/features/autofill/services/geminiService';
+import { extractDataFromDocument } from '@/app/features/autofill-v2/services/geminiService';
 import { FieldItem } from './FieldItem';
 import { AddFieldForm } from './AddFieldForm';
 
