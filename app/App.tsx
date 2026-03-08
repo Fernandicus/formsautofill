@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { DataProfile } from './features/profile/components/DataProfile';
 import { ReviewModal } from './features/autofill-v2/components/ReviewModal';
+import { MarkedPdfPreview } from './features/autofill-v2/components/MarkedPdfPreview';
 import { StatusOverlay } from './shared/components/StatusOverlay';
 import { useDataGroups } from './features/profile/hooks/useDataGroups';
 import { usePdfProcessing } from './features/autofill-v2/hooks/usePdfProcessing';
@@ -20,10 +21,13 @@ const App: React.FC = () => {
     mappings,
     pdfLanguage,
     showReview,
+    markedBase64,
     handleFileChange,
     handleConfirmFill,
     closeStatusModal,
     cancelReview,
+    continueMapping,
+    cancelMarksReview,
   } = usePdfProcessing({ groups, saveScrapedFields });
   
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -95,6 +99,14 @@ const App: React.FC = () => {
           fromLanguage={pdfLanguage}
           onConfirm={handleConfirmFill} 
           onCancel={cancelReview} 
+        />
+      )}
+
+      {status.step === 'review_marks' && markedBase64 && (
+        <MarkedPdfPreview 
+          base64Pdf={markedBase64}
+          onContinue={continueMapping}
+          onCancel={cancelMarksReview}
         />
       )}
 

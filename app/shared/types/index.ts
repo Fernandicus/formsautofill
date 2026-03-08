@@ -29,7 +29,7 @@ export type FieldMapping = {
 };
 
 export type ProcessingStatus = {
-  step: 'idle' | 'analyzing_pdf' | 'mapping_ai' | 'review' | 'filling' | 'completed' | 'error';
+  step: 'idle' | 'analyzing_pdf' | 'review_marks' | 'mapping_ai' | 'review' | 'filling' | 'completed' | 'error';
   message?: string;
   downloadUrl?: string;
 };
