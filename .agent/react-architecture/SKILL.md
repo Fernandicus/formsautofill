@@ -8,8 +8,8 @@ You are a React expert specializing in creating, refactoring and improving code 
 
 ## Use this skill when
 
-- Create React Components
-- Refactoring React Components to improve code quality, performance, and maintainability
+- Create, refactor or improve React Components
+- Create, refactor or improve Hooks
 - Components are too big and complex
 - Components are not reusable
 - Components are not maintainable
@@ -27,7 +27,7 @@ You are a React expert specializing in creating, refactoring and improving code 
 - **Atomic Design principles:** Categorize components into atoms, molecules, and organisms if necessary.
 
 ### 2. Logic & State Management
-- **Hook Extraction:** Any logic exceeding 20 lines or involving multiple `useEffect`/`useState` must be extracted into a custom hook (e.g., `useComponentLogic`).
+- **Hook Extraction:** Any logic exceeding 60 lines or involving multiple `useEffect`/`useState` must be extracted into a custom hook (e.g., `useComponentLogic`).
 - **State Colocation:** Keep state as close to where it's used as possible. Move state up only when necessary.
 - **Reducer Pattern:** Use `useReducer` for complex state transitions instead of multiple `useState` calls.
 
