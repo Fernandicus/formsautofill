@@ -76,6 +76,7 @@ type PdfProcessingAction =
   | { type: 'START_MARKS_REVIEW'; payload: { markedBase64: string; pendingPdfFields: PdfFieldInfo[] } }
   | { type: 'CANCEL_REVIEW' }
   | { type: 'CANCEL_MARKS_REVIEW' }
+  | { type: 'HIDE_REVIEW' }
   | { type: 'CLEAR_PENDING' };
 
 const initialState: PdfProcessingState = {
@@ -121,6 +122,8 @@ const reducer = (state: PdfProcessingState, action: PdfProcessingAction): PdfPro
       return { ...state, showReview: false, status: { step: 'idle' } };
     case 'CANCEL_MARKS_REVIEW':
       return { ...state, status: { step: 'idle' }, markedBase64: null, pendingPdfFields: [] };
+    case 'HIDE_REVIEW':
+      return { ...state, showReview: false };
     case 'CLEAR_PENDING':
       return { ...state, markedBase64: null, pendingPdfFields: [] };
     default:
@@ -226,6 +229,7 @@ export const usePdfProcessing = ({ groups, saveScrapedFields }: UsePdfProcessing
       return;
     }
 
+    dispatch({ type: 'HIDE_REVIEW' });
     dispatch({ type: 'SET_STATUS', payload: { step: 'filling', message: 'Generating your PDF...' } });
 
     if (newFieldsToSave && newFieldsToSave.length > 0) {
