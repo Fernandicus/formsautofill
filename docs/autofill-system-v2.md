@@ -1,57 +1,50 @@
-# Documentación Arquitectónica: Implementación de "Set-of-Mark" en el Sistema de Autocompletado de PDFs
+# Autofill System (v2) - Architecture & Workflow
 
-Este documento detalla la actualización arquitectónica realizada en el módulo de autocompletado de PDFs (`app/features/autofill/`), migrando de un sistema de inferencia espacial basado en coordenadas a un sistema de comprensión visual basado en el método **Set-of-Mark (Marcado Visual)**.
+This document explains the architecture and logic of the current Autofill system (V2), which leverages the **Set-of-Mark** visual strategy and Gemini LLM to drastically improve form-filling accuracy.
 
----
+## 1. Overview
+Instead of relying on internal, often cryptic PDF field names to infer what data belongs in what field, the new system takes a visual approach. It draws explicit, numbered red markers next to each fillable field and sends an image (or base64 version) of the PDF directly to Google's Gemini Vision model.
 
-## 1. El Problema: Limitaciones de la Inferencia Espacial
+By asking Gemini to visually analyze the red markers along with their surrounding text (e.g., the label "First Name" next to marker `[0]`), the system accurately correlates User Data with the corresponding PDF fields.
 
-En la versión anterior del sistema, el flujo extraía las coordenadas físicas (`rect`) y los nombres internos de los campos interactivos mediante `pdf-lib` y enviaba esta metadata directamente al modelo Gemini (LLM). 
-
-Este enfoque presentaba tres problemas principales:
-* **Alucinaciones Espaciales:** A los modelos de lenguaje multimodales les cuesta traducir números abstractos de coordenadas (`{x: 100, y: 200}`) a ubicaciones exactas de píxeles en una imagen.
-* **Nombres Internos Confusos:** Los formularios PDF a menudo contienen IDs autogenerados y sin contexto (ej. `Text_1`, `1_1`).
-* **Sobrecarga del Prompt:** Enviar listas extensas de coordenadas en formato JSON aumentaba innecesariamente el tamaño del payload y el consumo de tokens.
-
----
-
-## 2. La Solución: Estrategia "Set-of-Mark" (Marcado Visual)
-
-
-
-Para resolver estos problemas, hemos adoptado la estrategia **Set-of-Mark**. En lugar de pedirle a la IA que calcule dónde está un campo en base a coordenadas abstractas, el sistema ahora dibuja marcadores visuales explícitos (índices numéricos como `[0]`, `[1]`) directamente sobre la imagen del documento *antes* de enviarlo al modelo.
-
-De esta forma, la IA no necesita hacer matemáticas; simplemente "lee" el documento de forma natural, asociando el texto adyacente (ej. "Nombre:") con el marcador visual (ej. `[3]`).
+## 2. Core Components
+The system resides under `app/features/autofill-v2/` and is divided into three main areas:
+- **Hooks (`usePdfProcessing.ts`)**: Oversees the entire state machine of the upload -> analyze -> map -> review -> fill flow.
+- **PDF Services (`pdfService.ts`)**: Handles local PDF parsing, red-marker drawing (Set-of-Mark), and final data injection using `pdf-lib`.
+- **Gemini Services (`geminiService.ts`)**: Constructs the prompt and context window, calling the Gemini model to intelligently map the user's data to the visually marked fields.
 
 ---
 
-## 3. Nuevo Flujo de Trabajo Técnico
+## 3. Step-by-Step Workflow
 
-El proceso ahora se divide en las siguientes etapas dentro de nuestros servicios aislados:
+### Step 1: Initialization & Extraction
+1. **User Uploads PDF:** The file is passed to `usePdfProcessing.ts` via `handleFileChange`.
+2. **Field Extraction (`pdfService.ts`):** We parse the PDF using `pdf-lib` and extract all interactive form fields (`PDFTextField`, `PDFCheckBox`, `PDFDropdown`, `PDFRadioGroup`). 
+3. **Capture Coordinates:** For each field, we extract its visual bounding box (`rect`), noting its `x` and `y` coordinates on the page.
 
-1. **Extracción ( `pdfService.ts` ):**
-   * Se lee el PDF original y se extraen los campos interactivos en un Array.
-   * La posición en el Array (`index`) se convierte en la fuente de verdad.
+### Step 2: Set-of-Mark Generation
+1. **Draw Markers (`pdfService.ts`):** We iterate over every extracted field. Using the `rect` coordinates, we draw a prominent red marker string like `[0]`, `[1]`, etc., onto a new temporary copy of the PDF.
+2. **Base64 Conversion:** This newly annotated (marked) PDF is converted into a base64 Data URL.
 
-2. **Marcado Visual ( `pdfService.ts` ):**
-   * Se ejecuta una nueva función (`generateMarkedPdfBase64`) que itera sobre el Array de campos.
-   * Utilizando `pdf-lib`, se dibuja texto rojo brillante (ej. `[0]`, `[1]`) exactamente en las coordenadas `rect` de cada campo.
-   * Se renderiza este PDF temporal modificado y se convierte a Base64.
+### Step 3: AI Inference (Gemini)
+1. **Prepare Data:** The application gathers all user data profiles (e.g., name, emails, addresses) and flattens them into a readable key-value list.
+2. **Prompting Gemini (`geminiService.ts`):** 
+   - The Marked PDF (base64) and the flattened User Data are sent to `gemini-3-flash-preview`.
+   - The prompt instructs the AI to look at each red numerical marker, read the adjacent semantic label (e.g., "Mailing Address: [3]"), and find the best match from the User Data.
+   - It also infers the predominant language of the PDF (outputted as an ISO 639-1 code).
+3. **Receipt of Mappings:** Gemini returns a JSON object mapping the `markerIndex` to a `userValue`, along with a confidence score and `isSuggestion` flag. 
 
-3. **Inferencia Visual de la IA ( `geminiService.ts` ):**
-   * Se envía a Gemini el PDF **marcado** junto con los datos del usuario.
-   * El prompt instruye al modelo a relacionar los datos del usuario basándose exclusivamente en el contexto visual que rodea a cada marcador numérico (`[0]`, `[1]`, etc.).
-   * El modelo responde con un mapeo limpio: `{ "0": "Lukas", "1": "Müller" }`.
+### Step 4: Index Reconnection & Review
+1. **Re-Map Indices:** The returned `markerIndex` strings are mapped back to actual `pdfFieldName` strings in the code.
+2. **User Review (`ReviewModal`):** 
+   - The user is presented with a modal showing Gemini's inferred mappings (`showReview` state in the hook).
+   - Unmatched fields are left blank, and suggested inferences are highlighted.
+   - The user can adjust values before confirming.
 
-4. **Inyección de Datos ( `pdfService.ts` ):**
-   * El sistema mapea los índices devueltos por la IA de vuelta a los objetos de campo originales de `pdf-lib`.
-   * Se autocompleta el PDF original de forma precisa y determinista.
-
----
-
-## 4. Motivos y Beneficios Clave
-
-* **Precisión Drásticamente Superior:** Elimina casi por completo las confusiones de campos superpuestos o nombres internos redundantes, mejorando la experiencia del usuario en la etapa de revisión.
-* **Menor Latencia de la API:** Al reducir la carga cognitiva geométrica del modelo `gemini-3-flash-preview`, el *Time-to-First-Token* (TTFT) disminuye.
-* **Reducción del Payload:** El JSON enviado en el prompt es mucho más ligero, ya que se eliminan las coordenadas `rect` y los nombres internos de la petición a la API.
-* **Independencia del Formato:** El sistema se vuelve totalmente inmune a cómo el creador del PDF haya nombrado las variables internas.
+### Step 5: Final PDF Generation
+1. **Fill PDF (`pdfService.ts`):** Upon confirmation, the application iterates over the mappings.
+2. **Data Injection:** Using `pdf-lib`, values are injected. 
+   - **Text Fields:** Direct string injection.
+   - **Checkboxes:** Truthy matches (`true`, `yes`, `x`, `1`) check the box, falsy matches uncheck it.
+   - **Dropdowns/Radios:** System attempts an exact match, falling back to a case-insensitive search if needed.
+3. **Delivery:** The final populated `Uint8Array` is generated into a Blob and opened in a new browser tab for the user to print or download.
