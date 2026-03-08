@@ -4,9 +4,57 @@ import { extractFormFields, fillPdf, generateMarkedPdfBase64 } from '@/app/featu
 import { mapFieldsWithGemini } from '@/app/features/autofill-v2/services/geminiService';
 import { logger } from '@/app/shared/utils/logger';
 
+const UI_PAINT_DELAY_MS = 1000;
+const SCANNING_DELAY_MS = 800;
+
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+const flattenUserGroups = (groups: { name: string; fields: UserField[] }[]): UserField[] => {
+  return groups.flatMap(group => 
+    group.fields.map(field => ({
+      id: field.id,
+      key: `${group.name}: ${field.key}`,
+      value: field.value
+    }))
+  );
+};
+
+const mergeGeminiMappings = (pdfFields: PdfFieldInfo[], geminiMappings: FieldMapping[]): FieldMapping[] => {
+  return pdfFields.map(field => {
+    const foundMapping = geminiMappings.find(mapping => mapping.pdfFieldName === field.name);
+    
+    if (foundMapping) {
+      return foundMapping;
+    }
+    
+    return {
+      pdfFieldName: field.name,
+      userValue: '',
+      label: field.label || field.name,
+      isSuggestion: false,
+      confidence: 'low'
+    };
+  });
+};
+
+const createPdfUrl = (pdfBytes: Uint8Array): string => {
+  const blob = new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' });
+  return URL.createObjectURL(blob);
+};
+
+const openPdfInNewTab = (url: string): Window | null => {
+  return window.open(url, '_blank');
+};
+
 type UsePdfProcessingProps = {
   groups: { name: string; fields: UserField[] }[];
   saveScrapedFields: (fields: UserField[]) => void;
+};
+
+type ExecuteMappingParams = {
+  file: File;
+  fieldsToMap: PdfFieldInfo[];
+  markedPdfData: string;
 };
 
 export const usePdfProcessing = ({ groups, saveScrapedFields }: UsePdfProcessingProps) => {
@@ -20,50 +68,35 @@ export const usePdfProcessing = ({ groups, saveScrapedFields }: UsePdfProcessing
   const [markedBase64, setMarkedBase64] = useState<string | null>(null);
   const [pendingPdfFields, setPendingPdfFields] = useState<PdfFieldInfo[]>([]);
 
-  const executeMapping = useCallback(async (file: File, fieldsToMap: PdfFieldInfo[], markedPdfData: string) => {
+  const executeMapping = useCallback(async ({ file, fieldsToMap, markedPdfData }: ExecuteMappingParams) => {
     try {
-        logger.info('AI_MAPPING', 'Sending fields to Gemini for mapping...');
-        setStatus({ step: 'mapping_ai', message: 'Gemini is thinking...' });
-        
-        // Yield to main thread so UI can paint the status overlay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        const flattenedFields: UserField[] = groups.flatMap(group => 
-            group.fields.map(field => ({
-                id: field.id,
-                key: `${group.name}: ${field.key}`,
-                value: field.value
-            }))
-        );
+      logger.info('AI_MAPPING', 'Sending fields to Gemini for mapping...');
+      setStatus({ step: 'mapping_ai', message: 'Gemini is thinking...' });
+      
+      // Yield to main thread so UI can paint the status overlay
+      await delay(UI_PAINT_DELAY_MS);
+      
+      const flattenedFields = flattenUserGroups(groups);
+      const { mappings: generatedMappings, detectedLanguage } = await mapFieldsWithGemini(fieldsToMap, flattenedFields, markedPdfData);
+      
+      logger.info('AI_MAPPING', `Gemini returned ${generatedMappings.length} mappings. Language: ${detectedLanguage}`, generatedMappings);
+      
+      const allMappings = mergeGeminiMappings(fieldsToMap, generatedMappings);
 
-        const { mappings: generatedMappings, detectedLanguage } = await mapFieldsWithGemini(fieldsToMap, flattenedFields, markedPdfData);
-        logger.info('AI_MAPPING', `Gemini returned ${generatedMappings.length} mappings. Language: ${detectedLanguage}`, generatedMappings);
-        
-        const allMappings: FieldMapping[] = fieldsToMap.map(field => {
-            const found = generatedMappings.find(m => m.pdfFieldName === field.name);
-            if (found) return found;
-            return {
-            pdfFieldName: field.name,
-            userValue: '',
-            label: field.label || field.name,
-            isSuggestion: false,
-            confidence: 'low'
-            };
-        });
-
-        setMappings(allMappings);
-        setPdfLanguage(detectedLanguage);
-        logger.info('REVIEW', 'Ready for user review.');
-        setStatus({ step: 'review' });
-        setShowReview(true);
+      setMappings(allMappings);
+      setPdfLanguage(detectedLanguage);
+      
+      logger.info('REVIEW', 'Ready for user review.');
+      setStatus({ step: 'review' });
+      setShowReview(true);
     } catch (error) {
-        logger.error('PDF_PROCESS', 'An error occurred during mapping.', error);
-        console.error(error);
-        setStatus({ step: 'error', message: 'An error occurred during mapping.' });
+      logger.error('PDF_PROCESS', 'An error occurred during mapping.', error);
+      console.error(error);
+      setStatus({ step: 'error', message: 'An error occurred during mapping.' });
     } finally {
-        // Clear pending states
-        setMarkedBase64(null);
-        setPendingPdfFields([]);
+      // Clear pending states
+      setMarkedBase64(null);
+      setPendingPdfFields([]);
     }
   }, [groups]);
 
@@ -73,7 +106,7 @@ export const usePdfProcessing = ({ groups, saveScrapedFields }: UsePdfProcessing
       setStatus({ step: 'analyzing_pdf', message: 'Scanning PDF fields...' });
       
       // Yield to main thread so UI can paint the status overlay
-      await new Promise(resolve => setTimeout(resolve, 800));
+      await delay(SCANNING_DELAY_MS);
       
       logger.info('PDF_ANALYZE', 'Extracting form fields from PDF...');
       const pdfFields = await extractFormFields(file);
@@ -95,10 +128,10 @@ export const usePdfProcessing = ({ groups, saveScrapedFields }: UsePdfProcessing
         setMarkedBase64(markedPdfBase64);
         setPendingPdfFields(pdfFields);
         setStatus({ step: 'review_marks' });
-      } else {
-        await executeMapping(file, pdfFields, markedPdfBase64);
+        return;
       }
 
+      await executeMapping({ file, fieldsToMap: pdfFields, markedPdfData: markedPdfBase64 });
     } catch (error) {
       logger.error('PDF_PROCESS', 'An error occurred during processing.', error);
       console.error(error);
@@ -107,22 +140,35 @@ export const usePdfProcessing = ({ groups, saveScrapedFields }: UsePdfProcessing
   }, [executeMapping]);
 
   const continueMapping = useCallback(async () => {
-    if (!currentFile || !markedBase64 || pendingPdfFields.length === 0) return;
-    await executeMapping(currentFile, pendingPdfFields, markedBase64);
+    if (!currentFile || !markedBase64 || pendingPdfFields.length === 0) {
+      return;
+    }
+    
+    await executeMapping({
+      file: currentFile,
+      fieldsToMap: pendingPdfFields,
+      markedPdfData: markedBase64
+    });
   }, [currentFile, markedBase64, pendingPdfFields, executeMapping]);
 
   const handleFileChange = useCallback((file: File | null) => {
-    if (!file) return;
+    if (!file) {
+      return;
+    }
     
     setCurrentFile(file);
     setStatus({ step: 'idle' });
     setMarkedBase64(null);
     setPendingPdfFields([]);
+    
     processPdf(file);
   }, [processPdf]);
 
   const handleConfirmFill = useCallback(async (finalMappings: FieldMapping[], newFieldsToSave?: UserField[]) => {
-    if (!currentFile) return;
+    if (!currentFile) {
+      return;
+    }
+
     setShowReview(false);
 
     if (newFieldsToSave && newFieldsToSave.length > 0) {
@@ -136,15 +182,16 @@ export const usePdfProcessing = ({ groups, saveScrapedFields }: UsePdfProcessing
     try {
       const pdfBytes = await fillPdf(currentFile, finalMappings);
       logger.info('PDF_FILL', 'PDF file generated successfully.');
-      const blob = new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      const win = window.open(url, '_blank');
+      
+      const url = createPdfUrl(pdfBytes);
+      const newTabWindow = openPdfInNewTab(url);
 
       setStatus({ 
-          step: 'completed', 
-          message: win ? 'PDF Ready! Opened in new tab.' : 'PDF Ready! Click below to view.',
-          downloadUrl: url
+        step: 'completed', 
+        message: newTabWindow ? 'PDF Ready! Opened in new tab.' : 'PDF Ready! Click below to view.',
+        downloadUrl: url
       });
+      
       logger.info('COMPLETED', 'Process finished.');
     } catch (error) {
       logger.error('PDF_FILL', 'Failed to write to PDF.', error);
