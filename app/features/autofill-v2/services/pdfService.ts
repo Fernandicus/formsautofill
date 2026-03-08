@@ -8,15 +8,32 @@ const FALSY_VALUES = ['false', 'no', 'unchecked', '0', 'off'];
 /**
  * Helper to get field coordinates
  */
-const getFieldRect = (field: any) => {
+const getFieldRect = (field: any, doc: PDFDocument) => {
   try {
     const widgets = field.acroField.getWidgets();
     if (widgets && widgets.length > 0) {
-      const rect = widgets[0].getRectangle();
-      // Find which page this widget belongs to
-      // This is expensive if we iterate all pages. 
-      // For now, let's assume page 0 or handle page context if needed.
-      return { x: rect.x, y: rect.y, width: rect.width, height: rect.height, pageIndex: 0 }; 
+      const widget = widgets[0];
+      const rect = widget.getRectangle();
+      
+      let pageIndex = 0;
+      const pages = doc.getPages();
+      const pageRef = widget.P();
+      
+      if (pageRef) {
+        pageIndex = pages.findIndex(p => p.ref === pageRef);
+      } else {
+        const widgetRef = doc.context.getObjectRef(widget.dict);
+        if (widgetRef) {
+          const page = doc.findPageForAnnotationRef(widgetRef);
+          if (page) {
+            pageIndex = pages.findIndex(p => p.ref === page.ref);
+          }
+        }
+      }
+      
+      if (pageIndex === -1) pageIndex = 0;
+
+      return { x: rect.x, y: rect.y, width: rect.width, height: rect.height, pageIndex }; 
     }
   } catch (e) {
     // ignore
@@ -51,7 +68,7 @@ export const extractFormFields = async (file: File): Promise<PdfFieldInfo[]> => 
     return {
       name: f.getName(),
       type,
-      rect: getFieldRect(f),
+      rect: getFieldRect(f, pdfDoc),
       options
     };
   });
