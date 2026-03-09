@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/app/shared/components/Button';
 
 type AddFieldFormProps = {
   onAdd: (key: string, value: string) => void;
@@ -42,14 +43,15 @@ export const AddFieldForm: React.FC<AddFieldFormProps> = ({ onAdd }) => {
           placeholder="Value"
         />
       </div>
-      <button
+      <Button
         type="button"
+        variant="outline"
         onClick={handleAddField}
         disabled={!addKey.trim() || !addValue.trim()}
-        className="w-full text-sm font-semibold py-2.5 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-600 hover:border-indigo-300 hover:text-indigo-600"
+        className="w-full text-slate-600 hover:border-indigo-300 hover:text-indigo-600"
       >
         Add Field
-      </button>
+      </Button>
     </div>
   );
 };

@@ -2,6 +2,8 @@ import React from 'react';
 import { FieldMapping, UserField } from '@/app/shared/types';
 import { FieldItem } from '@/app/features/profile/components/DataProfile/FieldItem';
 import { SaveDataIcon } from '../../../../../icons';
+import { Modal } from '@/app/shared/components/Modal';
+import { Button } from '@/app/shared/components/Button';
 
 type SaveDataPromptProps = {
   fieldsToSave: UserField[];
@@ -18,8 +20,7 @@ export const SaveDataPrompt: React.FC<SaveDataPromptProps> = ({
   removeFieldToSave
 }) => {
   return (
-    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-md max-h-[90vh] flex flex-col rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 text-center">
+    <Modal maxWidth="max-w-md" className="max-h-[90vh] rounded-3xl text-center" isOpen={true}>
           <div className="p-6 shrink-0 pb-4">
               <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
                   <SaveDataIcon className="w-8 h-8"/>
@@ -42,20 +43,21 @@ export const SaveDataPrompt: React.FC<SaveDataPromptProps> = ({
           </div>
 
           <div className="p-6 shrink-0 pt-4 flex gap-3 justify-center bg-white border-t border-slate-50">
-              <button 
+              <Button 
+                variant="outline"
                 onClick={() => onConfirm(false)}
-                className="px-5 py-2.5 text-sm font-bold text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl transition-all"
+                className="rounded-xl"
               >
                 No, just generate
-              </button>
-              <button 
+              </Button>
+              <Button 
+                variant="primary"
                 onClick={() => onConfirm(true)}
-                className="px-5 py-2.5 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-lg shadow-indigo-600/30 transition-all transform active:scale-95 flex items-center gap-2"
+                className="rounded-xl shadow-indigo-600/30 active:scale-95"
               >
                 Yes, store it
-              </button>
+              </Button>
           </div>
-      </div>
-    </div>
+      </Modal>
   );
 };

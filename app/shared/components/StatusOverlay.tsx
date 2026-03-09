@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { ProcessingStatus } from '@/app/shared/types';
 import { CheckIcon, CloseIcon, DocumentIcon, ExternalLinkIcon, SearchIcon, SparkleIcon, UserIcon, WarningIcon } from '../../../icons';
+import { Modal } from '@/app/shared/components/Modal';
+import { Button } from '@/app/shared/components/Button';
 
 type StatusOverlayProps = {
   status: ProcessingStatus;
@@ -23,8 +25,7 @@ export const StatusOverlay: React.FC<StatusOverlayProps> = ({ status, onClose })
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity">
-      <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full text-center relative animate-in fade-in zoom-in duration-200">
+    <Modal maxWidth="max-w-sm" className="rounded-2xl p-8 text-center relative" isOpen={true} onClose={onClose}>
         
         {!isProcessing && (
            <button 
@@ -92,12 +93,13 @@ export const StatusOverlay: React.FC<StatusOverlayProps> = ({ status, onClose })
             </div>
             <h3 className="text-lg font-bold text-slate-800 mb-1">Error</h3>
             <p className="text-slate-500 text-sm mb-6">{status.message}</p>
-            <button 
+            <Button 
+              variant="secondary"
               onClick={onClose} 
-              className="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold py-2 rounded-lg transition-colors"
+              className="w-full"
             >
               Close
-            </button>
+            </Button>
           </div>
         )}
 
@@ -121,15 +123,15 @@ export const StatusOverlay: React.FC<StatusOverlayProps> = ({ status, onClose })
                 </a>
             )}
 
-            <button 
+            <Button 
+              variant="secondary"
               onClick={onClose} 
-              className="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold py-2 rounded-lg transition-colors"
+              className="w-full"
             >
               Done
-            </button>
+            </Button>
           </div>
         )}
-      </div>
-    </div>
+      </Modal>
   );
 };

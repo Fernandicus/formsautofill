@@ -6,6 +6,7 @@ import { StatusOverlay } from './shared/components/StatusOverlay';
 import { useDataGroups } from './features/profile/hooks/useDataGroups';
 import { usePdfProcessing } from './features/autofill-v2/hooks/usePdfProcessing';
 import { AutoFillLogoIcon, UploadIcon } from '../icons';
+import { Button } from './shared/components/Button';
 
 const App: React.FC = () => {
   const {
@@ -62,13 +63,13 @@ const App: React.FC = () => {
             <div className="text-sm font-medium text-slate-500 hidden sm:block">
               Powered by Gemini 3 Flash
             </div>
-            <button 
+            <Button 
+              variant="primary"
               onClick={handleUploadClick}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold px-4 py-2 rounded-lg shadow-md hover:shadow-lg transition-all flex items-center gap-2"
+              leftIcon={<UploadIcon className="w-4 h-4"/>}
             >
-              <UploadIcon className="w-4 h-4"/>
               Upload PDF
-            </button>
+            </Button>
             <input 
               type="file" 
               ref={fileInputRef} 
