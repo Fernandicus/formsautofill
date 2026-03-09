@@ -1,7 +1,8 @@
 import { useCallback } from 'react';
-import { FieldMapping, UserField, ProcessingStatus } from '@/app/shared/types';
-import { fillPdf } from '@/app/features/autofill/services/pdfService';
+import { FieldMapping, UserField } from '@/app/shared/types';
+import { fillPdf } from '@/app/features/autofill-v2/services/pdfService';
 import { logger } from '@/app/shared/utils/logger';
+import { PdfProcessingAction } from './usePdfProcessingState';
 
 const createPdfUrl = (pdfBytes: Uint8Array): string => {
     const blob = new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' });
@@ -13,18 +14,19 @@ const openPdfInNewTab = (url: string): Window | null => {
 };
 
 type UsePdfGeneratorProps = {
-    currentFile: File | null;
-    setStatus: (status: ProcessingStatus) => void;
+    dispatch: React.Dispatch<PdfProcessingAction>;
     saveScrapedFields: (fields: UserField[]) => void;
+    currentFile: File | null;
 };
 
-export const usePdfGenerator = ({ currentFile, setStatus, saveScrapedFields }: UsePdfGeneratorProps) => {
+export const usePdfGenerator = ({ dispatch, saveScrapedFields, currentFile }: UsePdfGeneratorProps) => {
     const handleConfirmFill = useCallback(async (finalMappings: FieldMapping[], newFieldsToSave?: UserField[]) => {
         if (!currentFile) {
-            return; // Guard clause
+            return;
         }
 
-        setStatus({ step: 'filling', message: 'Generating your PDF...' });
+        dispatch({ type: 'HIDE_REVIEW' });
+        dispatch({ type: 'SET_STATUS', payload: { step: 'filling', message: 'Generating your PDF...' } });
 
         if (newFieldsToSave && newFieldsToSave.length > 0) {
             logger.info('SAVE_DATA', `Saving ${newFieldsToSave.length} new fields to profile...`);
@@ -40,19 +42,22 @@ export const usePdfGenerator = ({ currentFile, setStatus, saveScrapedFields }: U
             const url = createPdfUrl(pdfBytes);
             const newTabWindow = openPdfInNewTab(url);
 
-            setStatus({
-                step: 'completed',
-                message: newTabWindow ? 'PDF Ready! Opened in new tab.' : 'PDF Ready! Click below to view.',
-                downloadUrl: url
+            dispatch({
+                type: 'SET_STATUS',
+                payload: {
+                    step: 'completed',
+                    message: newTabWindow ? 'PDF Ready! Opened in new tab.' : 'PDF Ready! Click below to view.',
+                    downloadUrl: url
+                }
             });
 
             logger.info('COMPLETED', 'Process finished.');
         } catch (error) {
             logger.error('PDF_FILL', 'Failed to write to PDF.', error);
             console.error(error);
-            setStatus({ step: 'error', message: 'Failed to write to PDF.' });
+            dispatch({ type: 'SET_STATUS', payload: { step: 'error', message: 'Failed to write to PDF.' } });
         }
-    }, [currentFile, setStatus, saveScrapedFields]);
+    }, [currentFile, dispatch, saveScrapedFields]);
 
     return { handleConfirmFill };
 };
