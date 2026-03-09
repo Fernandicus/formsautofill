@@ -17,9 +17,9 @@ You are a React expert specializing in component architecture, custom hooks, and
 
 ## Do not use this skill when
 
-- You are optimizing Next.js performance metrics, bundle size, or SSR (**use `../react-best-practices/SKILL.md`**).
-- You are handling global or server state like Redux, Zustand, or React Query (**use `../react-state-management/SKILL.md`**).
-- You are architecting pure TypeScript domain/business logic detached from the UI (**use `../typescript-architect/SKILL.md`**).
+- You are optimizing Next.js performance metrics, bundle size, or SSR. For React/Next.js performance rules, refer to `../react-best-practices/SKILL.md`.
+- You are handling global or server state like Redux, Zustand, or React Query. For global/server state solutions, refer to `../react-state-management/SKILL.md`.
+- You are architecting pure TypeScript domain/business logic detached from the UI. For clean code and domain logic, refer to `../typescript-architect/SKILL.md`.
 - You need UI/UX styling instructions with Tailwind.
 
 ## Instructions
@@ -27,8 +27,11 @@ You are a React expert specializing in component architecture, custom hooks, and
 ### 1. Component Architecture & Composition
 - **Composition over Inheritance:** Always default to using the `children` prop and component composition to avoid deep prop drilling.
 - **Atomic Design Principles:** Categorize UI components appropriately into basic elements (atoms), combinations (molecules), and layout parts (organisms) if necessary.
-- **Component Reusability:** Ensure components are reusable across different contexts and features. For example, a button component should be reusable in different forms and pages.
-- **Icons and SVG**: Create an `icons` folder in the root of the project and use it to store all icons and SVGs. .
+- **Component Reusability & Consistency:** 
+  - ALWAYS search the existing codebase (e.g., `src/components`, `src/ui`, or your design system folder) before creating a new React component.
+  - Prioritize reusing existing UI elements (buttons, modals, inputs, layout wrappers) to maintain design and functional consistency.
+- **Extend over Duplicate:** If an existing component almost fits your needs, extend it by adding optional props or variants rather than building a entirely new, similar component from scratch.
+- **Icons and SVG**: Create an `icons` folder in the root of the project and use it to store all icons and SVGs.
 
 ### 2. Logic & State Management
 - **Hook Extraction:** Any component logic exceeding 60 lines or involving multiple `useEffect`/`useState` hooks must be extracted into a custom hook (e.g., `use[Feature]Logic`).
@@ -51,52 +54,9 @@ Organize files by feature domain, not by file type.
 
 ## Examples
 
-### Hook Extraction
-**Before (Bloated Component):**
-```tsx
-function UserProfile({ userId }) {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  
-  useEffect(() => {
-    fetchUser(userId).then(data => {
-      setUser(data);
-      setLoading(false);
-    });
-  }, [userId]);
-
-  if (loading) return <Spinner />;
-  return <div>{user.name}</div>;
-}
-```
-
-**After (Extracted to Hook):**
-```tsx
-// hooks/useUserProfile.ts
-function useUserProfile(userId) {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  
-  useEffect(() => {
-    fetchUser(userId).then(data => {
-      setUser(data);
-      setLoading(false);
-    });
-  }, [userId]);
-  
-  return { user, loading };
-}
-
-// components/UserProfile.tsx
-function UserProfile({ userId }) {
-  const { user, loading } = useUserProfile(userId);
-
-  if (loading) return <Spinner />;
-  return <div>{user.name}</div>;
-}
-```
+For hook extraction examples, refer to `./samples/hook-extraction.md`.
 
 ## Related Skills
-- For React/Next.js performance rules: `../react-best-practices/SKILL.md`
-- For global/server state solutions: `../react-state-management/SKILL.md`
-- For clean code and domain logic: `../typescript-architect/SKILL.md`
+- For React/Next.js performance rules, refer to `../react-best-practices/SKILL.md`
+- For global/server state solutions, refer to `../react-state-management/SKILL.md`
+- For clean code and domain logic, refer to `../typescript-architect/SKILL.md`
