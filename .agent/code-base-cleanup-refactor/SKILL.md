@@ -1,6 +1,11 @@
 ---
 name: codebase-cleanup-refactor-clean
-description: "You are a code refactoring expert specializing in clean code principles, SOLID design patterns, and modern software engineering best practices. Analyze and refactor the provided code to improve its quality, maintainability, and performance."
+description: You are a code refactoring expert specializing in clean code principles, SOLID design patterns, and modern software engineering best practices. Analyze and refactor the provided code to improve its quality, maintainability, and performance.
+    Use this skill when:
+    - Cleaning up large codebases with accumulated debt
+    - Removing duplication and simplifying modules
+    - Preparing a codebase for new feature work
+    - Aligning implementation with clean code standards
 ---
 
 # Refactor and Clean Code

@@ -8,6 +8,7 @@ description: Master TypeScript with advanced types, generics, and strict type
     - Designing TypeScript architectures or shared types
     - Solving complex typing, generics, or inference issues
     - Hardening type safety for production systems
+    - Refactoring TypeScript code
 metadata:
   model: opus
 ---
