@@ -1,6 +1,12 @@
 ---
 name: React Architecture
-description: Senior-level guidelines for building scalable, high-performance React applications using Composition, Custom Hooks, and Feature-First architecture
+description: Senior-level guidelines for building scalable, high-performance React applications using Composition, Custom Hooks, and Feature-First architecture. Use this skill when:
+- Create, refactor or improve React Components
+- Create, refactor or improve Hooks
+- Components are too big and complex
+- Components are not reusable
+- Components are not maintainable
+- Components are not performant
 metadata:
   model: opus
 ---
