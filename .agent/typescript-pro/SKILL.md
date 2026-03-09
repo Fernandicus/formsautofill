@@ -3,7 +3,11 @@ name: typescript-pro
 description: Master TypeScript with advanced types, generics, and strict type
   safety. Handles complex type systems, decorators, and enterprise-grade
   patterns. Use PROACTIVELY for TypeScript architecture, type inference
-  optimization, or advanced typing patterns.
+  optimization, or advanced typing patterns. 
+  Use this skill when:
+    - Designing TypeScript architectures or shared types
+    - Solving complex typing, generics, or inference issues
+    - Hardening type safety for production systems
 metadata:
   model: opus
 ---
