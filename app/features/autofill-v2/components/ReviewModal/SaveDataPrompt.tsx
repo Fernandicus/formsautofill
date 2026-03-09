@@ -1,6 +1,7 @@
 import React from 'react';
 import { FieldMapping, UserField } from '@/app/shared/types';
 import { FieldItem } from '@/app/features/profile/components/DataProfile/FieldItem';
+import { SaveDataIcon } from '../../../../../icons';
 
 type SaveDataPromptProps = {
   fieldsToSave: UserField[];
@@ -21,9 +22,7 @@ export const SaveDataPrompt: React.FC<SaveDataPromptProps> = ({
       <div className="bg-white w-full max-w-md max-h-[90vh] flex flex-col rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 text-center">
           <div className="p-6 shrink-0 pb-4">
               <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-                  </svg>
+                  <SaveDataIcon className="w-8 h-8"/>
               </div>
               <h3 className="text-xl font-bold text-slate-800 tracking-tight mb-2">Save New Data?</h3>
               <p className="text-sm text-slate-500">

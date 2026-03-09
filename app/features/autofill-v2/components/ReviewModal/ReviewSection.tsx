@@ -1,4 +1,5 @@
 import React, { ReactNode } from 'react';
+import { ChevronIcon } from '../../../../../icons';
 
 type ReviewSectionProps = {
   title: string;
@@ -68,12 +69,7 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
             onClick={onToggle}
             className={`p-1.5 rounded-lg transition-all mt-0.5 sm:mt-0 ${activeTheme.button}`}
           >
-            <svg 
-              className={`w-5 h-5 transition-transform duration-300 ${isOpen ? 'rotate-0' : '-rotate-90'}`} 
-              fill="none" stroke="currentColor" viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
+            <ChevronIcon className={`w-5 h-5 transition-transform duration-300 ${isOpen ? 'rotate-0' : '-rotate-90'}`} />
           </button>
           <div>
             <h4 className={`font-bold flex items-center gap-2 ${activeTheme.title}`}>

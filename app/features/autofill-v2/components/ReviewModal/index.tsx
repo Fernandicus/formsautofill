@@ -4,6 +4,7 @@ import { MappingRow } from './MappingRow';
 import { ReviewSection } from './ReviewSection';
 import { SaveDataPrompt } from './SaveDataPrompt';
 import { useReviewMappings } from '@/app/features/autofill-v2/hooks/useReviewMappings';
+import { ArrowRightIcon, CheckCircleIcon, CloseIcon, MissingDataIcon, SparkleIcon, SpinnerIcon, TranslateIcon } from '../../../../../icons';
 
 type ReviewModalProps = {
   mappings: FieldMapping[];
@@ -85,14 +86,9 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ mappings, fromLanguage
                   aria-label="Translate labels"
                 >
                   {isTranslating ? (
-                    <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
+                    <SpinnerIcon className="animate-spin h-4 w-4"/>
                   ) : (
-                    <svg className="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
-                    </svg>
+                    <TranslateIcon className="w-4 h-4 group-hover:scale-110 transition-transform"/>
                   )}
                   {isTranslating ? 'Translating...' : 'Translate labels'}
                 </button>
@@ -101,9 +97,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ mappings, fromLanguage
             <p className="text-sm text-slate-500 mt-1.5 font-medium">Review AI matches before generating your document.</p>
           </div>
           <button onClick={onCancel} aria-label="Close modal" className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 p-2.5 rounded-full transition-all shrink-0">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <CloseIcon className="w-6 h-6"/>
           </button>
         </div>
 
@@ -117,7 +111,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ mappings, fromLanguage
                 isOpen={showMissing}
                 onToggle={() => setShowMissing(!showMissing)}
                 theme="rose"
-                icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>}
+                icon={<MissingDataIcon className="w-5 h-5"/>}
             >
                 {renderMappingRows(missingIndices)}
             </ReviewSection>
@@ -129,7 +123,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ mappings, fromLanguage
                 isOpen={showSuggestions}
                 onToggle={() => setShowSuggestions(!showSuggestions)}
                 theme="amber"
-                icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>}
+                icon={<SparkleIcon className="w-5 h-5"/>}
                 actions={
                   <>
                      <button onClick={handleClearAllSuggestions} className="text-xs font-bold text-amber-700 hover:bg-amber-100/80 px-4 py-2 rounded-lg transition-colors border border-amber-200">
@@ -152,7 +146,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ mappings, fromLanguage
                 onToggle={() => setShowMatched(!showMatched)}
                 theme="indigo"
                 emptyMessage="No direct profile matches were found."
-                icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+                icon={<CheckCircleIcon className="w-5 h-5"/>}
             >
                 {renderMappingRows(matchedIndices)}
             </ReviewSection>
@@ -172,9 +166,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ mappings, fromLanguage
             className="px-8 py-2.5 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-lg shadow-indigo-600/30 transition-all transform active:scale-95 flex items-center gap-2"
           >
             <span>Generate Document</span>
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-            </svg>
+            <ArrowRightIcon className="w-5 h-5"/>
           </button>
         </div>
       </div>

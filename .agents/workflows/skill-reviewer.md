@@ -19,6 +19,7 @@ Analyze the core instructions and suggest the following improvements:
 - **Grammar & Tone:** Ensure professional and concise English.
 - **Practical Samples:** If missing, generate 2-3 "Input/Output" or "Action" examples.
 - **Reference Assets:** Suggest if a `/references` folder or additional documentation is needed for complex logic.
+- **Code examples:** All code examples and practical samples must be added to the `./samples` folder and make a reference to them if needed. Do not clutter the main SKILL file with long code blocks.
 
 ### 4. Cross-Linking & Relations
 Identify related SKILLS within the workspace. 

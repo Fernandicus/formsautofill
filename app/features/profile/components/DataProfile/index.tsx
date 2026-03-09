@@ -1,6 +1,7 @@
 import React from 'react';
 import { DataGroup } from '@/app/shared/types';
 import { GroupCard } from './GroupCard';
+import { PlusIcon } from '../../../../../icons';
 
 type DataProfileProps = {
   groups: DataGroup[];
@@ -31,9 +32,7 @@ export const DataProfile: React.FC<DataProfileProps> = ({
           onClick={addGroup}
           className="bg-white border border-indigo-200 text-indigo-600 hover:bg-indigo-50 font-semibold text-sm px-4 py-2 rounded-lg transition-colors flex items-center gap-2 shadow-sm"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
+          <PlusIcon className="w-4 h-4"/>
           Create Group
         </button>
       </div>
