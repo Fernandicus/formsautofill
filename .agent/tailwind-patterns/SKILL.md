@@ -18,6 +18,10 @@ date_added: "2026-02-27"
 
 Use this skill when configuring Tailwind v4, using CSS-first theme and design tokens, or implementing container queries and modern Tailwind patterns.
 
+## When NOT to use this skill
+
+Do not use this skill when building a massive component library from scratch or when establishing the high-level architecture of a brand-new design system (Use `tailwind-design-system` instead).
+
 ---
 
 ## 1. Tailwind v4 Architecture

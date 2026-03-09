@@ -23,6 +23,7 @@ Build production-ready design systems with Tailwind CSS, including design tokens
 
 - The task is unrelated to tailwind design system
 - You need a different domain or tool outside this scope
+- You are configuring Tailwind v4 CSS configuration and container queries (Use `tailwind-patterns` instead).
 
 ## Instructions
 
