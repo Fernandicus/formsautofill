@@ -21,6 +21,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ mappings, fromLanguage
   const {
     editedMappings,
     isTranslating,
+    isTranslated,
     showMissing,
     setShowMissing,
     showSuggestions,
@@ -85,14 +86,14 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ mappings, fromLanguage
                   onClick={() => handleTranslateLabels(DEFAULT_LANG)}
                   disabled={isTranslating}
                   className="text-indigo-600 bg-indigo-50 hover:bg-indigo-100 font-semibold flex items-center gap-2 group"
-                  aria-label="Translate labels"
+                  aria-label={isTranslated ? "Show original labels" : "Translate labels"}
                 >
                   {isTranslating ? (
                     <SpinnerIcon className="animate-spin h-4 w-4"/>
                   ) : (
                     <TranslateIcon className="w-4 h-4 group-hover:scale-110 transition-transform"/>
                   )}
-                  {isTranslating ? 'Translating...' : 'Translate labels'}
+                  {isTranslating ? 'Translating...' : (isTranslated ? 'Show original labels' : 'Translate labels')}
                 </Button>
               )}
             </div>

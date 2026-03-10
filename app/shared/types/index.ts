@@ -26,6 +26,7 @@ export type FieldMapping = {
   originalValue?: string; // To track edits
   isSuggestion?: boolean; // Indicates if the value was AI-generated rather than from user profile
   label?: string; // Visual label for display
+  originalLabel?: string; // Original visual label before translation
 };
 
 export type ProcessingStatus = {

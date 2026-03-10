@@ -19,6 +19,7 @@ export const useReviewMappings = ({
 }: UseReviewMappingsProps) => {
   const [editedMappings, setEditedMappings] = useState<FieldMapping[]>(initialMappings);
   const [isTranslating, setIsTranslating] = useState(false);
+  const [isTranslated, setIsTranslated] = useState(false);
 
   const filterState = useReviewFilters();
   const saveState = useSavePrompt();
@@ -44,6 +45,17 @@ export const useReviewMappings = ({
   const handleTranslateLabels = useCallback(async (targetLang: string = defaultLang) => {
     if (isTranslating) return;
 
+    if (isTranslated) {
+      setEditedMappings((prev) =>
+        prev.map((m) => ({
+          ...m,
+          label: m.originalLabel !== undefined ? m.originalLabel : m.label,
+        }))
+      );
+      setIsTranslated(false);
+      return;
+    }
+
     setIsTranslating(true);
     translate.engine = 'google';
 
@@ -55,15 +67,20 @@ export const useReviewMappings = ({
 
       const updated = editedMappings.map((m, i) => {
         const translated = translatedLabels[i];
-        return translated ? { ...m, label: translated } : m;
+        return translated ? {
+          ...m,
+          originalLabel: m.originalLabel !== undefined ? m.originalLabel : (m.label || m.pdfFieldName),
+          label: translated
+        } : m;
       });
       setEditedMappings(updated);
+      setIsTranslated(true);
     } catch (error) {
       console.error('Translation error:', error);
     } finally {
       setIsTranslating(false);
     }
-  }, [editedMappings, fromLanguage, isTranslating, defaultLang]);
+  }, [editedMappings, fromLanguage, isTranslating, isTranslated, defaultLang]);
 
   const handleChange = useCallback((index: number, newValue: string) => {
     setEditedMappings(prev => {
@@ -130,6 +147,7 @@ export const useReviewMappings = ({
   return {
     editedMappings,
     isTranslating,
+    isTranslated,
     ...filterState,
     ...saveState,
     missingIndices,
