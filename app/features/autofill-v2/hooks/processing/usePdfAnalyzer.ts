@@ -33,17 +33,6 @@ export const usePdfAnalyzer = ({ dispatch, executeMapping }: UsePdfAnalyzerProps
             dispatch({ type: 'SET_STATUS', payload: { step: 'analyzing_pdf', message: 'Generating visual tags...' } });
             const markedPdfBase64 = await generateMarkedPdfBase64(file, pdfFields);
 
-            const isDev = import.meta.env.DEV;
-            const showPreview = import.meta.env.VITE_SHOW_MARKED_PDF === 'true';
-
-            if (isDev && showPreview) {
-                dispatch({
-                    type: 'START_MARKS_REVIEW',
-                    payload: { markedBase64: markedPdfBase64, pendingPdfFields: pdfFields }
-                });
-                return;
-            }
-
             await executeMapping({ file, fieldsToMap: pdfFields, markedPdfData: markedPdfBase64 });
         } catch (error) {
             logger.error('PDF_PROCESS', 'An error occurred during processing.', error);

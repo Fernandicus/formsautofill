@@ -65,7 +65,6 @@ export const useGeminiMapping = ({ dispatch, groups }: UseGeminiMappingProps) =>
             logger.error('PDF_PROCESS', 'An error occurred during mapping.', error);
             console.error(error);
             dispatch({ type: 'SET_STATUS', payload: { step: 'error', message: 'An error occurred during mapping.' } });
-            dispatch({ type: 'CLEAR_PENDING' });
         }
     }, [dispatch, groups]);
 
