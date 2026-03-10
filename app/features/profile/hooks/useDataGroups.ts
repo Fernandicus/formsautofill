@@ -37,7 +37,7 @@ export const useDataGroups = () => {
         id: crypto.randomUUID()
       }))
     };
-    
+
     const index = groups.findIndex(g => g.id === id);
     setGroups(prev => {
       const newGroups = [...prev];
@@ -55,9 +55,9 @@ export const useDataGroups = () => {
       value
     };
 
-    setGroups(prev => prev.map(group => 
-      group.id === groupId 
-        ? { ...group, fields: [...group.fields, newField] } 
+    setGroups(prev => prev.map(group =>
+      group.id === groupId
+        ? { ...group, fields: [...group.fields, newField] }
         : group
     ));
   }, [setGroups]);
@@ -65,8 +65,8 @@ export const useDataGroups = () => {
   const updateFieldInGroup = useCallback((groupId: string, fieldId: string, key: string, value: string) => {
     setGroups(prev => prev.map(group => {
       if (group.id !== groupId) return group;
-      
-      const updatedFields = group.fields.map(f => 
+
+      const updatedFields = group.fields.map(f =>
         f.id === fieldId ? { ...f, key, value } : f
       );
       return { ...group, fields: updatedFields };
@@ -85,21 +85,14 @@ export const useDataGroups = () => {
 
     setGroups(prev => {
       const existingGroupIndex = prev.findIndex(g => g.name === 'Saved Data');
-      
+
       const newFields: UserField[] = newFieldsToSave.map(f => ({
         id: crypto.randomUUID(),
         key: f.key,
         value: f.value
       }));
 
-      if (existingGroupIndex >= 0) {
-        const updatedGroups = [...prev];
-        updatedGroups[existingGroupIndex] = {
-           ...updatedGroups[existingGroupIndex],
-           fields: [...updatedGroups[existingGroupIndex].fields, ...newFields]
-        };
-        return updatedGroups;
-      } else {
+      if (existingGroupIndex < 0) {
         const newGroup: DataGroup = {
           id: crypto.randomUUID(),
           name: 'Saved Data',
@@ -108,6 +101,13 @@ export const useDataGroups = () => {
         };
         return [...prev, newGroup];
       }
+
+      const updatedGroups = [...prev];
+      updatedGroups[existingGroupIndex] = {
+        ...updatedGroups[existingGroupIndex],
+        fields: [...updatedGroups[existingGroupIndex].fields, ...newFields]
+      };
+      return updatedGroups;
     });
 
   }, [setGroups]);

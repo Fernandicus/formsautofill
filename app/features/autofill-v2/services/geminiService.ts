@@ -19,15 +19,18 @@ const fileToBase64 = (file: File): Promise<string> => {
   });
 };
 
+const getGeminiClient = (): GoogleGenAI => {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error("API Key not found");
+  return new GoogleGenAI({ apiKey });
+};
+
 export const mapFieldsWithGemini = async (
   pdfFields: PdfFieldInfo[],
   userFields: UserField[],
   markedBase64: string
 ): Promise<{ mappings: FieldMapping[], detectedLanguage: string }> => {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error("API Key not found");
-
-  const ai = new GoogleGenAI({ apiKey });
+  const ai = getGeminiClient();
 
   const prompt = `
     You are an intelligent form-filling assistant. 
@@ -61,10 +64,10 @@ export const mapFieldsWithGemini = async (
   const response = await ai.models.generateContent({
     model: GEMINI_MODEL,
     contents: {
-        parts: [
-            { inlineData: { mimeType: 'application/pdf', data: markedBase64 } },
-            { text: prompt }
-        ]
+      parts: [
+        { inlineData: { mimeType: 'application/pdf', data: markedBase64 } },
+        { text: prompt }
+      ]
     },
     config: {
       responseMimeType: "application/json",
@@ -95,7 +98,7 @@ export const mapFieldsWithGemini = async (
   try {
     const rawText = response.text || "{\"mappings\":[], \"detectedLanguage\":\"en\"}";
     const parsed = JSON.parse(rawText) as { mappings: any[], detectedLanguage: string };
-    
+
     // Map markerIndex back to pdfFieldName
     const finalMappings: FieldMapping[] = parsed.mappings.map(m => ({
       pdfFieldName: pdfFields[parseInt(m.markerIndex, 10)]?.name || "",
@@ -103,7 +106,7 @@ export const mapFieldsWithGemini = async (
       userValue: m.userValue,
       confidence: m.confidence,
       isSuggestion: m.isSuggestion,
-    })).filter(Math => Math.pdfFieldName);
+    })).filter(m => m.pdfFieldName);
 
     return { mappings: finalMappings, detectedLanguage: parsed.detectedLanguage };
   } catch (e) {
@@ -113,12 +116,7 @@ export const mapFieldsWithGemini = async (
 };
 
 export const extractDataFromDocument = async (file: File): Promise<UserField[]> => {
-  const apiKey = process.env.GEMINI_API_KEY;
-
-
-  if (!apiKey) throw new Error("API Key not found");
-
-  const ai = new GoogleGenAI({ apiKey });
+  const ai = getGeminiClient();
   const base64 = await fileToBase64(file);
 
   const prompt = `
@@ -136,10 +134,10 @@ export const extractDataFromDocument = async (file: File): Promise<UserField[]> 
   const response = await ai.models.generateContent({
     model: GEMINI_MODEL,
     contents: {
-        parts: [
-            { inlineData: { mimeType: file.type, data: base64 } },
-            { text: prompt }
-        ]
+      parts: [
+        { inlineData: { mimeType: file.type, data: base64 } },
+        { text: prompt }
+      ]
     },
     config: {
       responseMimeType: "application/json",
@@ -155,15 +153,16 @@ export const extractDataFromDocument = async (file: File): Promise<UserField[]> 
       }
     }
   });
-  
+
   try {
     const rawText = response.text || "[]";
-    const data = JSON.parse(rawText) as {key: string, value: string}[];
+    const data = JSON.parse(rawText) as { key: string, value: string }[];
     logger.info('DOCUMENT_SCRAPING', `Extracted ${data.length} fields from document.`);
+
     return data.map(item => ({
-        id: crypto.randomUUID(),
-        key: item.key,
-        value: item.value
+      id: crypto.randomUUID(),
+      key: item.key,
+      value: item.value
     }));
   } catch (e) {
     logger.error('DOCUMENT_SCRAPING', 'Failed to parse extracted data', e);
