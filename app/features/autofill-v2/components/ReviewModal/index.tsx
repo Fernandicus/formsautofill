@@ -5,7 +5,7 @@ import { ReviewSection } from './ReviewSection';
 import { SaveDataPrompt } from './SaveDataPrompt';
 import { useReviewMappings } from '@/app/features/autofill-v2/hooks/useReviewMappings';
 import { ArrowRightIcon, CheckCircleIcon, CloseIcon, MissingDataIcon, SparkleIcon, SpinnerIcon, TranslateIcon } from '../../../../../icons';
-import { Modal } from '@/app/shared/components/Modal';
+import { Modal, ModalHeader, ModalBody, ModalFooter } from '@/app/shared/components/Modal';
 import { Button } from '@/app/shared/components/Button';
 
 type ReviewModalProps = {
@@ -75,7 +75,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ mappings, fromLanguage
     <Modal maxWidth="max-w-5xl" className="h-[90vh] sm:h-auto sm:max-h-[90vh] rounded-3xl" isOpen={true} onClose={onCancel}>
         
         {/* Header */}
-        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white z-10 shrink-0">
+        <ModalHeader>
           <div>
             <div className="flex items-center gap-4">
               <h3 className="text-2xl font-bold text-slate-800 tracking-tight">Review Form Data</h3>
@@ -101,10 +101,10 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ mappings, fromLanguage
           <button onClick={onCancel} aria-label="Close modal" className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 p-2.5 rounded-full transition-all shrink-0">
             <CloseIcon className="w-6 h-6"/>
           </button>
-        </div>
+        </ModalHeader>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto bg-slate-50/50 p-6 space-y-6 scroll-smooth">
+        <ModalBody>
             
             <ReviewSection
                 title="Missing Data"
@@ -153,10 +153,10 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ mappings, fromLanguage
                 {renderMappingRows(matchedIndices)}
             </ReviewSection>
 
-        </div>
+        </ModalBody>
 
         {/* Footer */}
-        <div className="p-6 border-t border-slate-100 flex justify-end gap-3 bg-white z-10 shrink-0">
+        <ModalFooter>
           <Button 
             variant="outline"
             onClick={onCancel}
@@ -172,7 +172,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ mappings, fromLanguage
           >
             Generate Document
           </Button>
-        </div>
+        </ModalFooter>
     </Modal>
   );
 };

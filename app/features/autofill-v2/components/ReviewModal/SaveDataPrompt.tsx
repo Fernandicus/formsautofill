@@ -2,7 +2,7 @@ import React from 'react';
 import { FieldMapping, UserField } from '@/app/shared/types';
 import { FieldItem } from '@/app/features/profile/components/DataProfile/FieldItem';
 import { SaveDataIcon } from '../../../../../icons';
-import { Modal } from '@/app/shared/components/Modal';
+import { Modal, ModalHeader, ModalBody, ModalFooter } from '@/app/shared/components/Modal';
 import { Button } from '@/app/shared/components/Button';
 
 type SaveDataPromptProps = {
@@ -21,7 +21,7 @@ export const SaveDataPrompt: React.FC<SaveDataPromptProps> = ({
 }) => {
   return (
     <Modal maxWidth="max-w-md" className="max-h-[90vh] rounded-3xl text-center" isOpen={true}>
-          <div className="p-6 shrink-0 pb-4">
+          <ModalHeader className="flex-col justify-center border-b-0 pb-4">
               <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
                   <SaveDataIcon className="w-8 h-8"/>
               </div>
@@ -29,9 +29,9 @@ export const SaveDataPrompt: React.FC<SaveDataPromptProps> = ({
               <p className="text-sm text-slate-500">
                 You filled out <span className="font-bold text-indigo-600">{fieldsToSave.length}</span> new field(s). Modify their labels below if needed, and store them for future use.
               </p>
-          </div>
+          </ModalHeader>
 
-          <div className="overflow-y-auto px-6 pb-2 space-y-3 text-left w-full custom-scrollbar">
+          <ModalBody className="px-6 pb-2 space-y-3 text-left w-full h-full bg-white">
             {fieldsToSave.map((field, idx) => (
               <FieldItem 
                 key={field.id}
@@ -40,9 +40,9 @@ export const SaveDataPrompt: React.FC<SaveDataPromptProps> = ({
                 onRemove={() => removeFieldToSave(field.id)}
               />
             ))}
-          </div>
+          </ModalBody>
 
-          <div className="p-6 shrink-0 pt-4 flex gap-3 justify-center bg-white border-t border-slate-50">
+          <ModalFooter className="pt-4 justify-center border-t border-slate-50">
               <Button 
                 variant="outline"
                 onClick={() => onConfirm(false)}
@@ -57,7 +57,7 @@ export const SaveDataPrompt: React.FC<SaveDataPromptProps> = ({
               >
                 Yes, store it
               </Button>
-          </div>
+          </ModalFooter>
       </Modal>
   );
 };

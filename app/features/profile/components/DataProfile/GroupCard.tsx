@@ -3,7 +3,8 @@ import { DataGroup } from '@/app/shared/types';
 import { extractDataFromDocument } from '@/app/features/autofill-v2/services/geminiService';
 import { FieldItem } from './FieldItem';
 import { AddFieldForm } from './AddFieldForm';
-import { ChevronIcon, CloseIcon, DuplicateIcon, EditPencilIcon, RefreshIcon, TrashIcon, UserIcon } from '../../../../../icons';
+import { EditableText } from '@/app/shared/components/EditableText';
+import { ChevronIcon, CloseIcon, DuplicateIcon, RefreshIcon, TrashIcon, UserIcon } from '../../../../../icons';
 
 type GroupCardProps = { 
   group: DataGroup; 
@@ -46,25 +47,18 @@ export const GroupCard: React.FC<GroupCardProps> = ({
           <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600">
             <UserIcon className="w-5 h-5"/>
           </div>
-          {isEditingName ? (
-            <input 
-              autoFocus
-              value={tempName}
-              onChange={e => setTempName(e.target.value)}
-              onBlur={handleSaveName}
-              onKeyDown={e => e.key === 'Enter' && handleSaveName()}
-              className="font-bold text-lg text-slate-800 bg-slate-50 border border-slate-200 rounded px-2 py-1 outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-          ) : (
-            <h2 
-              onClick={() => setIsEditingName(true)}
-              className="font-bold text-lg text-slate-800 cursor-pointer hover:text-indigo-600 transition-colors flex items-center gap-2 group/title"
-              title="Click to rename"
-            >
-              {group.name}
-              <EditPencilIcon className="w-4 h-4 text-slate-300 opacity-0 group-hover/title:opacity-100 transition-opacity"/>
-            </h2>
-          )}
+          <EditableText 
+            value={group.name}
+            onSave={(newVal) => {
+              setTempName(newVal);
+              // Small hack to use the existing hooked handleSaveName pattern
+              // We dispatch update synchronously if tempName is updated directly or re-wire hook
+              updateGroup({ ...group, name: newVal });
+            }}
+            as="h2"
+            textClassName="font-bold text-lg text-slate-800"
+            inputClassName="text-lg"
+          />
         </div>
         <div className="flex items-center gap-2">
           <input 
