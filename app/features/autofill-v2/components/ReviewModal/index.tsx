@@ -82,10 +82,11 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ mappings, fromLanguage
               <h3 className="text-2xl font-bold text-slate-800 tracking-tight">Review Form Data</h3>
               {DEFAULT_LANG !== fromLanguage && (
                 <Button
+                  variant="secondary"
                   size="sm"
                   onClick={() => handleTranslateLabels(DEFAULT_LANG)}
                   disabled={isTranslating}
-                  className="text-indigo-600 bg-indigo-50 hover:bg-indigo-100 font-semibold flex items-center gap-2 group"
+                  className="font-semibold flex items-center gap-2 group"
                   aria-label={isTranslated ? "Show original labels" : "Translate labels"}
                 >
                   {isTranslating ? (
