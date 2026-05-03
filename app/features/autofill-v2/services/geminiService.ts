@@ -32,6 +32,14 @@ export const mapFieldsWithGemini = async (
 ): Promise<{ mappings: FieldMapping[], detectedLanguage: string }> => {
   const ai = getGeminiClient();
 
+  const fieldMetadata = pdfFields.map((f, i) => {
+    let info = `[${i}]: Type ${f.type}`;
+    if (f.options && f.options.length > 0) {
+      info += `, Options: ${JSON.stringify(f.options)}`;
+    }
+    return info;
+  }).join('\n');
+
   const prompt = `
     You are an intelligent form-filling assistant. 
     I will provide you with a PDF file (visually) and a list of User Data.
@@ -51,7 +59,7 @@ export const mapFieldsWithGemini = async (
     - If the visual label is not very specific, try to read the text around the field to get more context to understand what it really represents.
     - Contextual Inference and Synonyms: For example, If User Data has "Car: Tesla", and visual field says "Vehicle", map it.
     - Checkboxes: Return "true", "yes", "checked" if applicable.
-    
+    - Dropdowns and Radio Buttons: If there is a logical/semantic match, you MUST select EXACTLY ONE of the values provided in the "Options" list from the Field Metadata below (e.g., if User Data is "Man" and Options has "Hombre", return "Hombre"). HOWEVER, if the user's data has no logical match in the Options list, return the user's data exactly as it is (do NOT return an empty string). This ensures the UI treats it as an inexact match rather than missing data.
     IMPORTANT:
     - 'markerIndex': MUST match the exact numerical index from the red markers (e.g., "0", "1", "2").
     - 'label': The visual label you found on the page (e.g. "First Name").
@@ -59,6 +67,9 @@ export const mapFieldsWithGemini = async (
     - 'detectedLanguage': Return the ISO 639-1 code for the document's language.
 
     User Data: ${JSON.stringify(userFields.map(u => ({ key: u.key, value: u.value })))}
+
+    Field Metadata:
+    ${fieldMetadata}
   `;
 
   const response = await ai.models.generateContent({
