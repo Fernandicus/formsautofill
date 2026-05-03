@@ -1,6 +1,7 @@
 import React from 'react';
 import { FieldMapping, UserField } from '@/app/shared/types';
 import { MappingRow } from './MappingRow';
+import { MappingGroupRow } from './MappingGroupRow';
 import { ReviewSection } from './ReviewSection';
 import { SaveDataPrompt } from './SaveDataPrompt';
 import { useReviewMappings } from '@/app/features/autofill-v2/hooks/useReviewMappings';
@@ -49,16 +50,44 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ mappings, fromLanguage
     defaultLang: DEFAULT_LANG
   });
 
-  const renderMappingRows = (indices: number[]) => (
-      indices.map(index => (
-        <MappingRow 
-            key={`${editedMappings[index].pdfFieldName}-${index}`}
-            mapping={editedMappings[index]}
-            onToggle={() => handleToggleInclude(index)}
-            onChange={(val) => handleChange(index, val)}
-        />
-      ))
-  );
+  const renderMappingRows = (indices: number[]) => {
+    // Group indices. We only group CheckBoxes by their label.
+    const groups = new Map<string, number[]>();
+    indices.forEach(index => {
+      const mapping = editedMappings[index];
+      // Use index as group key for non-grouped items, or label for CheckBoxes
+      const groupKey = (mapping.type === 'CheckBox' && mapping.label) ? `group_${mapping.label}` : `single_${index}`;
+      
+      if (!groups.has(groupKey)) {
+        groups.set(groupKey, []);
+      }
+      groups.get(groupKey)!.push(index);
+    });
+
+    return Array.from(groups.entries()).map(([groupKey, groupIndices]) => {
+      if (groupIndices.length === 1) {
+        const index = groupIndices[0];
+        return (
+          <MappingRow 
+              key={`${editedMappings[index].pdfFieldName}-${index}`}
+              mapping={editedMappings[index]}
+              onToggle={() => handleToggleInclude(index)}
+              onChange={(val) => handleChange(index, val)}
+          />
+        );
+      } else {
+        const label = editedMappings[groupIndices[0]].label || 'Group';
+        return (
+          <MappingGroupRow
+            key={groupKey}
+            label={label}
+            mappings={groupIndices.map(i => editedMappings[i])}
+            onToggle={(localIndex) => handleToggleInclude(groupIndices[localIndex])}
+          />
+        );
+      }
+    });
+  };
 
   if (showSavePrompt) {
     return (

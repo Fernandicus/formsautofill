@@ -1,8 +1,9 @@
 import { useState, useMemo, useCallback } from 'react';
-import translate from 'translate';
 import { FieldMapping, UserField } from '@/app/shared/types';
 import { useReviewFilters } from './review/useReviewFilters';
 import { useSavePrompt } from './review/useSavePrompt';
+import { useReviewTranslation } from './review/useReviewTranslation';
+import { useMappingActions } from './review/useMappingActions';
 
 type UseReviewMappingsProps = {
   initialMappings: FieldMapping[];
@@ -18,11 +19,23 @@ export const useReviewMappings = ({
   defaultLang = 'en'
 }: UseReviewMappingsProps) => {
   const [editedMappings, setEditedMappings] = useState<FieldMapping[]>(initialMappings);
-  const [isTranslating, setIsTranslating] = useState(false);
-  const [isTranslated, setIsTranslated] = useState(false);
 
   const filterState = useReviewFilters();
   const saveState = useSavePrompt();
+
+  const { isTranslating, isTranslated, handleTranslateLabels } = useReviewTranslation(
+    editedMappings,
+    setEditedMappings,
+    fromLanguage,
+    defaultLang
+  );
+
+  const {
+    handleChange,
+    handleToggleInclude,
+    handleAcceptAllSuggestions,
+    handleClearAllSuggestions
+  } = useMappingActions(setEditedMappings);
 
   const { missingIndices, suggestedIndices, matchedIndices } = useMemo(() => {
     const missing: number[] = [];
@@ -42,94 +55,24 @@ export const useReviewMappings = ({
     return { missingIndices: missing, suggestedIndices: suggested, matchedIndices: matched };
   }, [initialMappings]);
 
-  const handleTranslateLabels = useCallback(async (targetLang: string = defaultLang) => {
-    if (isTranslating) return;
-
-    if (isTranslated) {
-      setEditedMappings((prev) =>
-        prev.map((m) => ({
-          ...m,
-          label: m.originalLabel !== undefined ? m.originalLabel : m.label,
-        }))
-      );
-      setIsTranslated(false);
-      return;
-    }
-
-    setIsTranslating(true);
-    translate.engine = 'google';
-
-    try {
-      const labelsToTranslate = editedMappings.map(m => m.label || m.pdfFieldName);
-      const batchString = labelsToTranslate.join('\n');
-      const translatedBatch = await translate(batchString, { from: fromLanguage, to: targetLang });
-      const translatedLabels = translatedBatch.split('\n').map(s => s.trim());
-
-      const updated = editedMappings.map((m, i) => {
-        const translated = translatedLabels[i];
-        return translated ? {
-          ...m,
-          originalLabel: m.originalLabel !== undefined ? m.originalLabel : (m.label || m.pdfFieldName),
-          label: translated
-        } : m;
-      });
-      setEditedMappings(updated);
-      setIsTranslated(true);
-    } catch (error) {
-      console.error('Translation error:', error);
-    } finally {
-      setIsTranslating(false);
-    }
-  }, [editedMappings, fromLanguage, isTranslating, isTranslated, defaultLang]);
-
-  const handleChange = useCallback((index: number, newValue: string) => {
-    setEditedMappings(prev => {
-      const updated = [...prev];
-      updated[index] = { ...updated[index], userValue: newValue };
-      return updated;
-    });
-  }, []);
-
-  const handleToggleInclude = useCallback((index: number) => {
-    setEditedMappings(prev => {
-      const updated = [...prev];
-      const current = updated[index];
-
-      if (current.userValue) {
-        current.originalValue = current.userValue;
-        current.userValue = '';
-      } else {
-        current.userValue = current.originalValue || ' ';
-      }
-      return updated;
-    });
-  }, []);
-
-  const handleAcceptAllSuggestions = useCallback(() => {
-    setEditedMappings(prev => prev.map(m => {
-      if (!m.isSuggestion || m.userValue || !m.originalValue) return m;
-      return { ...m, userValue: m.originalValue };
-    }));
-  }, []);
-
-  const handleClearAllSuggestions = useCallback(() => {
-    setEditedMappings(prev => prev.map(m => {
-      if (!m.isSuggestion || !m.userValue) return m;
-      return { ...m, originalValue: m.userValue, userValue: '' };
-    }));
-  }, []);
-
   const handleGenerateClick = useCallback(() => {
     const newlyFilled: UserField[] = missingIndices
       .filter(idx => {
         const mapping = editedMappings[idx];
         return mapping.userValue && mapping.userValue.trim() !== '';
       })
-      .map(idx => ({
-        id: crypto.randomUUID(),
-        key: editedMappings[idx].label || editedMappings[idx].pdfFieldName,
-        value: editedMappings[idx].userValue
-      }));
+      .map(idx => {
+        const mapping = editedMappings[idx];
+        const valueToSave = (mapping.type === 'CheckBox' && mapping.displayValue) 
+          ? mapping.displayValue 
+          : mapping.userValue;
+
+        return {
+          id: crypto.randomUUID(),
+          key: mapping.label || mapping.pdfFieldName,
+          value: valueToSave
+        };
+      });
 
     if (newlyFilled.length > 0) {
       saveState.setFieldsToSave(newlyFilled);

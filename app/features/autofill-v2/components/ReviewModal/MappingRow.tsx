@@ -1,5 +1,6 @@
 import React from 'react';
 import { FieldMapping } from '@/app/shared/types';
+import { CheckCircleIcon } from '../../../../../icons';
 
 type MappingRowProps = {
   mapping: FieldMapping;
@@ -49,13 +50,40 @@ export const MappingRow: React.FC<MappingRowProps> = ({ mapping, onToggle, onCha
                 </span>
             )}
         </div>
-        <input
-          type="text"
-          value={userValue}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={isSelected ? "Add a value to include" : "Click to type an implicit value..."}
-          className={`w-full text-sm rounded-lg px-3 py-2.5 outline-none border focus:ring-2 transition-all ${inputClasses}`}
-        />
+        {mapping.type === 'CheckBox' ? (
+          <div className="pt-1">
+            <button
+              type="button"
+              onClick={onToggle}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold border transition-colors cursor-pointer ${
+                isSelected 
+                  ? (isSuggested ? 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100' : 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-sm hover:bg-indigo-100')
+                  : 'bg-slate-50 border-slate-200 text-slate-400 hover:bg-slate-100 hover:text-slate-600'
+              }`}
+            >
+              {isSelected ? (
+                <>
+                  <CheckCircleIcon className="w-4 h-4" />
+                  {mapping.displayValue || 'Yes'}
+                </>
+              ) : (
+                <>
+                  <div className="w-4 h-4 rounded-full border-2 border-slate-300" />
+                  {mapping.displayValue || 'Select'}
+                </>
+              )}
+            </button>
+          </div>
+        ) : (
+          <input
+            type="text"
+            value={isSelected ? userValue : (mapping.originalValue || '')}
+            disabled={!isSelected}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder={isSelected ? "Add a value to include" : "Click to type an implicit value..."}
+            className={`w-full text-sm rounded-lg px-3 py-2.5 outline-none border focus:ring-2 transition-all ${inputClasses} ${!isSelected ? 'cursor-not-allowed text-slate-500' : ''}`}
+          />
+        )}
       </div>
     </div>
   );

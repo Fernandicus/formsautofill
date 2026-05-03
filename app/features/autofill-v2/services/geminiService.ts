@@ -25,22 +25,18 @@ const getGeminiClient = (): GoogleGenAI => {
   return new GoogleGenAI({ apiKey });
 };
 
-export const mapFieldsWithGemini = async (
-  pdfFields: PdfFieldInfo[],
-  userFields: UserField[],
-  markedBase64: string
-): Promise<{ mappings: FieldMapping[], detectedLanguage: string }> => {
-  const ai = getGeminiClient();
-
-  const fieldMetadata = pdfFields.map((f, i) => {
+const buildFieldMetadata = (pdfFields: PdfFieldInfo[]): string => {
+  return pdfFields.map((f, i) => {
     let info = `[${i}]: Type ${f.type}`;
     if (f.options && f.options.length > 0) {
       info += `, Options: ${JSON.stringify(f.options)}`;
     }
     return info;
   }).join('\n');
+};
 
-  const prompt = `
+const buildMappingPrompt = (userFields: UserField[], fieldMetadata: string): string => {
+  return `
     You are an intelligent form-filling assistant. 
     I will provide you with a PDF file (visually) and a list of User Data.
     
@@ -58,7 +54,7 @@ export const mapFieldsWithGemini = async (
     - If the visual label says "Email", find the User Data for Email.
     - If the visual label is not very specific, try to read the text around the field to get more context to understand what it really represents.
     - Contextual Inference and Synonyms: For example, If User Data has "Car: Tesla", and visual field says "Vehicle", map it.
-    - Checkboxes: Return "true", "yes", "checked" if applicable.
+    - Checkboxes: The 'label' MUST represent the overarching group or question (e.g. "Sex", "Language"). Set 'displayValue' to the specific option text for this checkbox (e.g. "Hombre", "Spanish") regardless of whether it is matched or not. If the user data indicates it should be checked, set 'userValue' to "true". If it is unmatched or not checked, set 'userValue' to "".
     - Dropdowns and Radio Buttons: If there is a logical/semantic match, you MUST select EXACTLY ONE of the values provided in the "Options" list from the Field Metadata below (e.g., if User Data is "Man" and Options has "Hombre", return "Hombre"). HOWEVER, if the user's data has no logical match in the Options list, return the user's data exactly as it is (do NOT return an empty string). This ensures the UI treats it as an inexact match rather than missing data.
     IMPORTANT:
     - 'markerIndex': MUST match the exact numerical index from the red markers (e.g., "0", "1", "2").
@@ -71,6 +67,36 @@ export const mapFieldsWithGemini = async (
     Field Metadata:
     ${fieldMetadata}
   `;
+};
+
+const parseMappingResponse = (rawText: string, pdfFields: PdfFieldInfo[]) => {
+  const parsed = JSON.parse(rawText) as { mappings: any[], detectedLanguage: string };
+
+  const finalMappings: FieldMapping[] = parsed.mappings.map(m => {
+    const fieldIndex = parseInt(m.markerIndex, 10);
+    const pdfField = pdfFields[fieldIndex];
+    return {
+      pdfFieldName: pdfField?.name || "",
+      label: m.label,
+      userValue: m.userValue,
+      confidence: m.confidence,
+      isSuggestion: m.isSuggestion,
+      type: pdfField?.type,
+      displayValue: m.displayValue,
+    };
+  }).filter(m => m.pdfFieldName);
+
+  return { mappings: finalMappings, detectedLanguage: parsed.detectedLanguage };
+};
+
+export const mapFieldsWithGemini = async (
+  pdfFields: PdfFieldInfo[],
+  userFields: UserField[],
+  markedBase64: string
+): Promise<{ mappings: FieldMapping[], detectedLanguage: string }> => {
+  const ai = getGeminiClient();
+  const fieldMetadata = buildFieldMetadata(pdfFields);
+  const prompt = buildMappingPrompt(userFields, fieldMetadata);
 
   const response = await ai.models.generateContent({
     model: GEMINI_MODEL,
@@ -94,7 +120,8 @@ export const mapFieldsWithGemini = async (
                 label: { type: Type.STRING, description: "The visual label found on the page" },
                 userValue: { type: Type.STRING, description: "The value to fill" },
                 confidence: { type: Type.STRING, enum: ["high", "low"], description: "Confidence level" },
-                isSuggestion: { type: Type.BOOLEAN, description: "True if this is an AI guess/inference, False if direct match" }
+                isSuggestion: { type: Type.BOOLEAN, description: "True if this is an AI guess/inference, False if direct match" },
+                displayValue: { type: Type.STRING, description: "For checkboxes, the actual selected option text (e.g., 'Hombre')" }
               },
               required: ["markerIndex", "userValue", "confidence", "isSuggestion"]
             }
@@ -108,29 +135,15 @@ export const mapFieldsWithGemini = async (
 
   try {
     const rawText = response.text || "{\"mappings\":[], \"detectedLanguage\":\"en\"}";
-    const parsed = JSON.parse(rawText) as { mappings: any[], detectedLanguage: string };
-
-    // Map markerIndex back to pdfFieldName
-    const finalMappings: FieldMapping[] = parsed.mappings.map(m => ({
-      pdfFieldName: pdfFields[parseInt(m.markerIndex, 10)]?.name || "",
-      label: m.label,
-      userValue: m.userValue,
-      confidence: m.confidence,
-      isSuggestion: m.isSuggestion,
-    })).filter(m => m.pdfFieldName);
-
-    return { mappings: finalMappings, detectedLanguage: parsed.detectedLanguage };
+    return parseMappingResponse(rawText, pdfFields);
   } catch (e) {
     logger.error('GEMINI_API', 'Failed to parse Gemini response', e);
     return { mappings: [], detectedLanguage: "en" };
   }
 };
 
-export const extractDataFromDocument = async (file: File): Promise<UserField[]> => {
-  const ai = getGeminiClient();
-  const base64 = await fileToBase64(file);
-
-  const prompt = `
+const buildExtractionPrompt = (): string => {
+  return `
     Analyze this document (image or PDF) and extract all relevant data fields that would be useful for filling forms.
     Focus on extracting specific values like:
     - Personal Information (Name, Address, DOB, Phone, Email, etc.)
@@ -141,6 +154,23 @@ export const extractDataFromDocument = async (file: File): Promise<UserField[]> 
     Do not extract long paragraphs. Extract concise Key-Value pairs.
     Return the output as a JSON List of objects with 'key' and 'value' properties.
   `;
+};
+
+const parseExtractionResponse = (rawText: string): UserField[] => {
+  const data = JSON.parse(rawText) as { key: string, value: string }[];
+  logger.info('DOCUMENT_SCRAPING', `Extracted ${data.length} fields from document.`);
+
+  return data.map(item => ({
+    id: crypto.randomUUID(),
+    key: item.key,
+    value: item.value
+  }));
+};
+
+export const extractDataFromDocument = async (file: File): Promise<UserField[]> => {
+  const ai = getGeminiClient();
+  const base64 = await fileToBase64(file);
+  const prompt = buildExtractionPrompt();
 
   const response = await ai.models.generateContent({
     model: GEMINI_MODEL,
@@ -166,15 +196,7 @@ export const extractDataFromDocument = async (file: File): Promise<UserField[]> 
   });
 
   try {
-    const rawText = response.text || "[]";
-    const data = JSON.parse(rawText) as { key: string, value: string }[];
-    logger.info('DOCUMENT_SCRAPING', `Extracted ${data.length} fields from document.`);
-
-    return data.map(item => ({
-      id: crypto.randomUUID(),
-      key: item.key,
-      value: item.value
-    }));
+    return parseExtractionResponse(response.text || "[]");
   } catch (e) {
     logger.error('DOCUMENT_SCRAPING', 'Failed to parse extracted data', e);
     return [];

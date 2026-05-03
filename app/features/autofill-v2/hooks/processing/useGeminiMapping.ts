@@ -30,7 +30,8 @@ const mergeGeminiMappings = (pdfFields: PdfFieldInfo[], geminiMappings: FieldMap
             userValue: '',
             label: field.label || field.name,
             isSuggestion: false,
-            confidence: 'low'
+            confidence: 'low',
+            type: field.type
         };
     });
 };

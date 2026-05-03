@@ -27,6 +27,8 @@ export type FieldMapping = {
   isSuggestion?: boolean; // Indicates if the value was AI-generated rather than from user profile
   label?: string; // Visual label for display
   originalLabel?: string; // Original visual label before translation
+  type?: 'Text' | 'CheckBox' | 'Dropdown' | 'Other'; // Field type from the PDF
+  displayValue?: string; // Specific option value for checkboxes
 };
 
 export type ProcessingStatus = {
