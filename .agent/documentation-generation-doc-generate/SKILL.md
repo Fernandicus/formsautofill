@@ -2,7 +2,7 @@
 name: documentation-generation-doc-generate
 description: "You are a documentation expert specializing in creating comprehensive, maintainable documentation from code. Generate API docs, architecture diagrams, user guides, and technical references using AI. 
     Use this skill when:
-    - Generating API, architecture, or user documentation from code
+    - Generating API, architecture, new features or user documentation from code
     - Building documentation pipelines or automation
     - Standardizing docs across a repository
 risk: unknown

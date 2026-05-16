@@ -1,7 +1,7 @@
 /**
  * A simple utility for consistent application logging
  */
-const IS_DEV = import.meta.env.DEV;
+const IS_DEV = process.env.NODE_ENV !== 'production';
 
 export const logger = {
   info: (step: string, message: string, data?: any) => {
