@@ -62,17 +62,38 @@ export const MappingRow: React.FC<MappingRowProps> = ({ mapping, onToggle, onCha
               }`}
             >
               {isSelected ? (
-                <>
-                  <CheckCircleIcon className="w-4 h-4" />
-                  {mapping.displayValue || 'Yes'}
-                </>
+                <CheckCircleIcon className="w-4 h-4 shrink-0" />
               ) : (
-                <>
-                  <div className="w-4 h-4 rounded-full border-2 border-slate-300" />
-                  {mapping.displayValue || 'Select'}
-                </>
+                <div className="w-4 h-4 shrink-0 rounded-full border-2 border-slate-300" />
               )}
+              <span>{mapping.displayValue || (isSelected ? 'Yes' : 'Select')}</span>
             </button>
+          </div>
+        ) : mapping.type === 'RadioGroup' && mapping.options ? (
+          <div className="pt-1 flex flex-wrap gap-2">
+            {mapping.options.map((option, idx) => {
+              const isOptionSelected = isSelected && userValue === option;
+              const displayLabel = mapping.radioOptionsMap?.[option] || option;
+              return (
+                <button
+                  key={`${option}-${idx}`}
+                  type="button"
+                  onClick={() => onChange(isOptionSelected ? '' : option)}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold border transition-colors cursor-pointer ${
+                    isOptionSelected 
+                      ? (isSuggested ? 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100' : 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-sm hover:bg-indigo-100')
+                      : 'bg-slate-50 border-slate-200 text-slate-400 hover:bg-slate-100 hover:text-slate-600'
+                  }`}
+                >
+                  {isOptionSelected ? (
+                    <CheckCircleIcon className="w-4 h-4 shrink-0" />
+                  ) : (
+                    <div className="w-4 h-4 shrink-0 rounded-full border-2 border-slate-300" />
+                  )}
+                  <span>{displayLabel}</span>
+                </button>
+              );
+            })}
           </div>
         ) : (
           <input

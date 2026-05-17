@@ -51,7 +51,7 @@ const getFieldType = (field: PDFField): PdfFieldInfo['type'] => {
   if (field instanceof PDFTextField) return 'Text';
   if (field instanceof PDFCheckBox) return 'CheckBox';
   if (field instanceof PDFDropdown) return 'Dropdown';
-  if (field instanceof PDFRadioGroup) return 'Dropdown';
+  if (field instanceof PDFRadioGroup) return 'RadioGroup';
   return 'Other';
 };
 

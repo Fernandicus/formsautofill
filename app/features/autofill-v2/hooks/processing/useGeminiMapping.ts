@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { FieldMapping, PdfFieldInfo, UserField } from '@/app/shared/types';
-import { mapFieldsWithGemini } from '@/app/features/autofill-v2/services/geminiService';
+
 import { logger } from '@/app/shared/utils/logger';
 import { PdfProcessingAction } from './usePdfProcessingState';
 
@@ -50,7 +50,24 @@ export const useGeminiMapping = ({ dispatch, groups }: UseGeminiMappingProps) =>
             await delay(UI_PAINT_DELAY_MS);
 
             const flattenedFields = flattenUserGroups(groups);
-            const { mappings: generatedMappings, detectedLanguage } = await mapFieldsWithGemini(fieldsToMap, flattenedFields, markedPdfData);
+            const response = await fetch('/api/autofill/map', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    pdfFields: fieldsToMap,
+                    userFields: flattenedFields,
+                    markedBase64: markedPdfData
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || 'Failed to map fields');
+            }
+
+            const { mappings: generatedMappings, detectedLanguage } = await response.json();
 
             logger.info('AI_MAPPING', `Gemini returned ${generatedMappings.length} mappings. Language: ${detectedLanguage}`, generatedMappings);
 

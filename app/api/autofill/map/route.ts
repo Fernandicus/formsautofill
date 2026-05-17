@@ -41,7 +41,8 @@ const buildMappingPrompt = (userFields: UserField[], fieldMetadata: string): str
     - If the visual label is not very specific, try to read the text around the field to get more context to understand what it really represents.
     - Contextual Inference and Synonyms: For example, If User Data has "Car: Tesla", and visual field says "Vehicle", map it.
     - Checkboxes: The 'label' MUST represent the overarching group or question (e.g. "Sex", "Language"). Set 'displayValue' to the specific option text for this checkbox (e.g. "Hombre", "Spanish") regardless of whether it is matched or not. If the user data indicates it should be checked, set 'userValue' to "true". If it is unmatched or not checked, set 'userValue' to "".
-    - Dropdowns and Radio Buttons: First visually identify the label on the PDF that matches the User Data. Then, you MUST select EXACTLY ONE of the internal field values provided in the "Options" list from the Field Metadata below that corresponds to that visual label (inferring the mapping based on reading order if the internal values are uninformative like "1", "2"). (e.g., if User Data is "Man", visual label is "Male", and Options has "Male", return "Male". If Options are ["1", "2"], return the option that corresponds to "Male" by order). HOWEVER, if the user's data has no logical match, return the user's data exactly as it is (do NOT return an empty string). This ensures the UI treats it as an inexact match.
+    - Dropdowns: First visually identify the label on the PDF that matches the User Data. Then, you MUST select EXACTLY ONE of the internal field values provided in the "Options" list from the Field Metadata below that corresponds to that visual label. HOWEVER, if the user's data has no logical match, return the user's data exactly as it is (do NOT return an empty string). This ensures the UI treats it as an inexact match.
+    - RadioGroups: First visually identify the overarching group or question (e.g. "Gender"). Then, select EXACTLY ONE of the internal field values provided in the "Options" list from the Field Metadata below that corresponds to the visual label that matches the user data (inferring the mapping based on reading order if the internal values are uninformative like "1", "2"). Set 'userValue' to this exact internal field value. If the user's data has no logical match, set 'userValue' to "". You MUST also provide 'radioOptionsMap', an array mapping every internal option value to its human-readable visual label found on the PDF.
     IMPORTANT:
     - 'markerIndex': MUST match the exact numerical index from the red markers (e.g., "0", "1", "2").
     - 'label': The visual label you found on the page (e.g. "First Name").
@@ -61,6 +62,11 @@ const parseMappingResponse = (rawText: string, pdfFields: PdfFieldInfo[]) => {
   const finalMappings: FieldMapping[] = parsed.mappings.map(m => {
     const fieldIndex = parseInt(m.markerIndex, 10);
     const pdfField = pdfFields[fieldIndex];
+    const radioMap = m.radioOptionsMap?.reduce((acc: any, item: any) => {
+      acc[item.internalValue] = item.visualLabel;
+      return acc;
+    }, {} as Record<string, string>);
+
     return {
       pdfFieldName: pdfField?.name || "",
       label: m.label,
@@ -69,6 +75,8 @@ const parseMappingResponse = (rawText: string, pdfFields: PdfFieldInfo[]) => {
       isSuggestion: m.isSuggestion,
       type: pdfField?.type,
       displayValue: m.displayValue,
+      options: pdfField?.options,
+      radioOptionsMap: radioMap,
     };
   }).filter(m => m.pdfFieldName);
 
@@ -114,7 +122,19 @@ export async function POST(request: Request) {
                   userValue: { type: Type.STRING, description: "The value to fill" },
                   confidence: { type: Type.STRING, enum: ["high", "low"], description: "Confidence level" },
                   isSuggestion: { type: Type.BOOLEAN, description: "True if this is an AI guess/inference, False if direct match" },
-                  displayValue: { type: Type.STRING, description: "For checkboxes, the actual selected option text (e.g., 'Hombre')" }
+                  displayValue: { type: Type.STRING, description: "For checkboxes, the actual selected option text (e.g., 'Hombre')" },
+                  radioOptionsMap: {
+                    type: Type.ARRAY,
+                    description: "For RadioGroups, map internal option values to their visual labels",
+                    items: {
+                      type: Type.OBJECT,
+                      properties: {
+                        internalValue: { type: Type.STRING },
+                        visualLabel: { type: Type.STRING }
+                      },
+                      required: ["internalValue", "visualLabel"]
+                    }
+                  }
                 },
                 required: ["markerIndex", "userValue", "confidence", "isSuggestion"]
               }

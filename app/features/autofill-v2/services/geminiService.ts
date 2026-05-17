@@ -55,7 +55,8 @@ const buildMappingPrompt = (userFields: UserField[], fieldMetadata: string): str
     - If the visual label is not very specific, try to read the text around the field to get more context to understand what it really represents.
     - Contextual Inference and Synonyms: For example, If User Data has "Car: Tesla", and visual field says "Vehicle", map it.
     - Checkboxes: The 'label' MUST represent the overarching group or question (e.g. "Sex", "Language"). Set 'displayValue' to the specific option text for this checkbox (e.g. "Hombre", "Spanish") regardless of whether it is matched or not. If the user data indicates it should be checked, set 'userValue' to "true". If it is unmatched or not checked, set 'userValue' to "".
-    - Dropdowns and Radio Buttons: If there is a logical/semantic match, you MUST select EXACTLY ONE of the values provided in the "Options" list from the Field Metadata below (e.g., if User Data is "Man" and Options has "Hombre", return "Hombre"). HOWEVER, if the user's data has no logical match in the Options list, return the user's data exactly as it is (do NOT return an empty string). This ensures the UI treats it as an inexact match rather than missing data.
+    - Dropdowns: If there is a logical/semantic match, you MUST select EXACTLY ONE of the values provided in the "Options" list from the Field Metadata below. HOWEVER, if the user's data has no logical match in the Options list, return the user's data exactly as it is (do NOT return an empty string). This ensures the UI treats it as an inexact match rather than missing data.
+    - RadioGroups: Use similar logic as Checkboxes, where 'label' MUST represent the overarching group or question (e.g. "Gender"). Set 'userValue' to the exact internal field value from the "Options" list (e.g. "1", "2", "Male") that matches the user data. If there is no match, set 'userValue' to "". You MUST also provide 'radioOptionsMap', an array mapping every internal option value to its human-readable visual label found on the PDF.
     IMPORTANT:
     - 'markerIndex': MUST match the exact numerical index from the red markers (e.g., "0", "1", "2").
     - 'label': The visual label you found on the page (e.g. "First Name").
@@ -75,6 +76,11 @@ const parseMappingResponse = (rawText: string, pdfFields: PdfFieldInfo[]) => {
   const finalMappings: FieldMapping[] = parsed.mappings.map(m => {
     const fieldIndex = parseInt(m.markerIndex, 10);
     const pdfField = pdfFields[fieldIndex];
+    const radioMap = m.radioOptionsMap?.reduce((acc: any, item: any) => {
+      acc[item.internalValue] = item.visualLabel;
+      return acc;
+    }, {} as Record<string, string>);
+
     return {
       pdfFieldName: pdfField?.name || "",
       label: m.label,
@@ -83,6 +89,8 @@ const parseMappingResponse = (rawText: string, pdfFields: PdfFieldInfo[]) => {
       isSuggestion: m.isSuggestion,
       type: pdfField?.type,
       displayValue: m.displayValue,
+      options: pdfField?.options,
+      radioOptionsMap: radioMap,
     };
   }).filter(m => m.pdfFieldName);
 
@@ -121,7 +129,19 @@ export const mapFieldsWithGemini = async (
                 userValue: { type: Type.STRING, description: "The value to fill" },
                 confidence: { type: Type.STRING, enum: ["high", "low"], description: "Confidence level" },
                 isSuggestion: { type: Type.BOOLEAN, description: "True if this is an AI guess/inference, False if direct match" },
-                displayValue: { type: Type.STRING, description: "For checkboxes, the actual selected option text (e.g., 'Hombre')" }
+                displayValue: { type: Type.STRING, description: "For checkboxes, the actual selected option text (e.g., 'Hombre')" },
+                radioOptionsMap: {
+                  type: Type.ARRAY,
+                  description: "For RadioGroups, map internal option values to their visual labels",
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      internalValue: { type: Type.STRING },
+                      visualLabel: { type: Type.STRING }
+                    },
+                    required: ["internalValue", "visualLabel"]
+                  }
+                }
               },
               required: ["markerIndex", "userValue", "confidence", "isSuggestion"]
             }

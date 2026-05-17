@@ -49,7 +49,7 @@ export const MappingGroupRow: React.FC<MappingGroupRowProps> = ({ label, mapping
 
             return (
               <button
-                key={mapping.pdfFieldName}
+                key={`${mapping.pdfFieldName}-${idx}`}
                 type="button"
                 onClick={() => onToggle(idx)}
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold border transition-colors cursor-pointer ${
@@ -59,16 +59,11 @@ export const MappingGroupRow: React.FC<MappingGroupRowProps> = ({ label, mapping
                 }`}
               >
                 {isChipSelected ? (
-                  <>
-                    <CheckCircleIcon className="w-4 h-4" />
-                    {mapping.displayValue || 'Yes'}
-                  </>
+                  <CheckCircleIcon className="w-4 h-4 shrink-0" />
                 ) : (
-                  <>
-                    <div className="w-4 h-4 rounded-full border-2 border-slate-300" />
-                    {mapping.displayValue || 'Select'}
-                  </>
+                  <div className="w-4 h-4 shrink-0 rounded-full border-2 border-slate-300" />
                 )}
+                <span>{mapping.displayValue || (isChipSelected ? 'Yes' : 'Select')}</span>
               </button>
             );
           })}

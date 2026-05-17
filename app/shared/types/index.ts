@@ -13,7 +13,7 @@ export type DataGroup = {
 
 export type PdfFieldInfo = {
   name: string;
-  type: 'Text' | 'CheckBox' | 'Dropdown' | 'Other';
+  type: 'Text' | 'CheckBox' | 'Dropdown' | 'RadioGroup' | 'Other';
   label?: string; // Visual label extracted via AI
   rect?: { x: number, y: number, width: number, height: number, pageIndex: number };
   options?: string[]; // Available options for Dropdowns/RadioGroups
@@ -27,8 +27,10 @@ export type FieldMapping = {
   isSuggestion?: boolean; // Indicates if the value was AI-generated rather than from user profile
   label?: string; // Visual label for display
   originalLabel?: string; // Original visual label before translation
-  type?: 'Text' | 'CheckBox' | 'Dropdown' | 'Other'; // Field type from the PDF
+  type?: 'Text' | 'CheckBox' | 'Dropdown' | 'RadioGroup' | 'Other'; // Field type from the PDF
   displayValue?: string; // Specific option value for checkboxes
+  options?: string[]; // Options array for Dropdowns/RadioGroups
+  radioOptionsMap?: Record<string, string>; // Maps internal option values to human-readable visual labels
 };
 
 export type ProcessingStatus = {
