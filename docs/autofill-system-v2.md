@@ -8,10 +8,15 @@ Instead of relying on internal, often cryptic PDF field names to infer what data
 By asking Gemini to visually analyze the red markers along with their surrounding text (e.g., the label "First Name" next to marker `[0]`), the system accurately correlates User Data with the corresponding PDF fields.
 
 ## 2. Core Components
-The system resides under `app/features/autofill-v2/` and is divided into three main areas:
-- **Hooks (`usePdfProcessing.ts`)**: Oversees the entire state machine of the upload -> analyze -> map -> review -> fill flow.
+The system is distributed across server-side API routes and client-side features under `app/features/autofill-v2/`. It is divided into the following main areas:
+- **API Routes (`app/api/autofill/`)**: Secure Next.js API endpoints (`/map` and `/extract`) that interact with the Gemini model, protecting sensitive API keys from the client.
+- **Hooks (`app/features/autofill-v2/hooks/`)**: A modular collection of React hooks.
+  - `usePdfProcessing.ts` oversees the main state machine (upload -> analyze -> map -> review -> fill).
+  - Sub-hooks in `processing/` (e.g., `usePdfAnalyzer.ts`, `useGeminiMapping.ts`) manage specific phases.
+  - Sub-hooks in `review/` handle user interactions during the review phase.
+- **Components (`app/features/autofill-v2/components/ReviewModal/`)**: The review UI is modularized into multiple components (`MappingRow`, `MappingGroupRow`, `ReviewSection`, etc.) for maintainability.
 - **PDF Services (`pdfService.ts`)**: Handles local PDF parsing, red-marker drawing (Set-of-Mark), and final data injection using `pdf-lib`.
-- **Gemini Services (`geminiService.ts`)**: Constructs the prompt and context window, calling the Gemini model to intelligently map the user's data to the visually marked fields.
+- **Gemini Services (`geminiService.ts`)**: Server-only service used by the API routes to construct the prompt and context window, calling the Gemini model to intelligently map the user's data to the visually marked fields.
 
 ---
 
@@ -28,8 +33,9 @@ The system resides under `app/features/autofill-v2/` and is divided into three m
 
 ### Step 3: AI Inference (Gemini)
 1. **Prepare Data:** The application gathers all user data profiles (e.g., name, emails, addresses) and flattens them into a readable key-value list.
-2. **Prompting Gemini (`geminiService.ts`):** 
-   - The Marked PDF (base64) and the flattened User Data are sent to `gemini-3-flash-preview`.
+2. **Prompting Gemini (`geminiService.ts` via Next.js API):** 
+   - The Marked PDF (base64) and the flattened User Data are sent to the `/api/autofill/map` endpoint via the `useGeminiMapping.ts` hook.
+   - The server calls `gemini-3-flash-preview` using the `geminiService.ts`.
    - The prompt instructs the AI to look at each red numerical marker, read the adjacent semantic label (e.g., "Mailing Address: [3]"), and find the best match from the User Data.
    - It also infers the predominant language of the PDF (outputted as an ISO 639-1 code).
 3. **Receipt of Mappings:** Gemini returns a JSON object mapping the `markerIndex` to a `userValue`, along with a confidence score and `isSuggestion` flag. 
