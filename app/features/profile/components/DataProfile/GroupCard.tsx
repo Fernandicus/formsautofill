@@ -134,7 +134,15 @@ export const GroupCard: React.FC<GroupCardProps> = ({
           <div className="p-4 space-y-3">
             {group.fields.length === 0 && !isExtracting && (
               <div className="text-center py-4 text-slate-400 text-sm italic">
-                No fields yet. Upload a document above or add manually below.
+                No fields yet.{' '}
+                <button 
+                  type="button" 
+                  onClick={() => fileInputRef.current?.click()} 
+                  className="text-indigo-600 hover:text-indigo-700 hover:underline font-medium not-italic"
+                >
+                  Upload a document
+                </button>{' '}
+                or add manually below.
               </div>
             )}
             {group.fields.map((field) => (
