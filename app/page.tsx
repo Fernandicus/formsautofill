@@ -7,6 +7,8 @@ import { StatusOverlay } from './shared/components/StatusOverlay';
 import { useDataGroups } from './features/profile/hooks/useDataGroups';
 import { usePdfProcessing } from './features/autofill-v2/hooks/usePdfProcessing';
 import { AppHeader } from './shared/components/AppHeader';
+import { UserOnboarding } from './features/profile/components/UserOnboarding';
+import { useOnboarding } from './features/profile/hooks/useOnboarding';
 
 const App: React.FC = () => {
   const {
@@ -15,8 +17,18 @@ const App: React.FC = () => {
     updateGroup, 
     deleteGroup, 
     duplicateGroup,
-    saveScrapedFields
+    saveScrapedFields,
+    createGroupWithData
   } = useDataGroups();
+
+  const { hasCompletedOnboarding, completeOnboarding } = useOnboarding();
+
+  const handleOnboardingComplete = (fields: { key: string, value: string }[]) => {
+    if (fields.length > 0) {
+      createGroupWithData('Personal Info', fields);
+    }
+    completeOnboarding();
+  };
 
   const {
     status,
@@ -52,6 +64,13 @@ const App: React.FC = () => {
       )}
 
       <StatusOverlay status={status} onClose={closeStatusModal} />
+
+      {!hasCompletedOnboarding && (
+        <UserOnboarding 
+          onComplete={handleOnboardingComplete} 
+          onSkip={completeOnboarding} 
+        />
+      )}
     </div>
   );
 };

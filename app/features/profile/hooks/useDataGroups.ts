@@ -112,6 +112,16 @@ export const useDataGroups = () => {
 
   }, [setGroups]);
 
+  const createGroupWithData = useCallback((name: string, fields: Omit<UserField, 'id'>[]) => {
+    const newGroup: DataGroup = {
+      id: crypto.randomUUID(),
+      name,
+      fields: fields.map(f => ({ ...f, id: crypto.randomUUID() })),
+      isExpanded: true
+    };
+    setGroups(prev => [newGroup, ...prev]);
+  }, [setGroups]);
+
   return {
     groups,
     addGroup,
@@ -121,6 +131,7 @@ export const useDataGroups = () => {
     addFieldToGroup,
     updateFieldInGroup,
     removeFieldFromGroup,
-    saveScrapedFields
+    saveScrapedFields,
+    createGroupWithData
   };
 };
