@@ -1,4 +1,5 @@
 import React from 'react';
+import { cn } from '@/app/shared/utils/cn';
 
 type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'warning' | 'ghost' | 'outline';
 type ButtonSize = 'sm' | 'md' | 'lg' | 'icon';
@@ -25,12 +26,12 @@ export const Button: React.FC<ButtonProps> = ({
   const baseStyles = "inline-flex items-center justify-center font-bold rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed";
   
   const variants = {
-    primary: "bg-indigo-600 hover:bg-indigo-700 text-white shadow-md hover:shadow-lg focus:ring-indigo-500",
-    secondary: "bg-slate-100 hover:bg-slate-200 text-slate-800 focus:ring-slate-500",
-    danger: "bg-red-50 hover:bg-red-100 text-red-600 focus:ring-red-500",
-    warning: "bg-amber-600 hover:bg-amber-700 text-white shadow-sm shadow-amber-200 focus:ring-amber-500",
-    ghost: "bg-transparent hover:bg-slate-100 text-slate-600 hover:text-slate-900",
-    outline: "border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 focus:ring-slate-500"
+    primary: "bg-primary hover:bg-primary-hover text-white shadow-md hover:shadow-lg focus:ring-primary",
+    secondary: "bg-secondary hover:bg-secondary-hover text-secondary-text focus:ring-slate-400",
+    danger: "bg-danger-light hover:bg-danger/10 text-danger focus:ring-danger",
+    warning: "bg-warning hover:bg-warning-hover text-white shadow-sm shadow-warning-light focus:ring-warning",
+    ghost: "bg-transparent hover:bg-secondary text-muted-foreground hover:text-foreground",
+    outline: "border border-border bg-white hover:bg-secondary text-muted-foreground focus:ring-slate-400"
   };
 
   const sizes = {
@@ -40,8 +41,8 @@ export const Button: React.FC<ButtonProps> = ({
     icon: "p-2"
   };
 
-  // Build class string
-  const buttonClass = `${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`;
+  // Build class string using cn utility
+  const buttonClass = cn(baseStyles, variants[variant], sizes[size], className);
 
   return (
     <button className={buttonClass} disabled={disabled || isLoading} {...props}>

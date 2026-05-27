@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { CheckIcon, CloseIcon, EditSquareIcon } from '../../../icons';
+import { cn } from '@/app/shared/utils/cn';
 
 type EditableTextProps = {
   value: string;
@@ -44,7 +45,7 @@ export const EditableText: React.FC<EditableTextProps> = ({
 
   if (isEditing) {
     return (
-      <div className={`flex items-center gap-2 ${className}`}>
+      <div className={cn("flex items-center gap-2", className)}>
         <input 
           autoFocus
           value={tempValue}
@@ -53,14 +54,17 @@ export const EditableText: React.FC<EditableTextProps> = ({
             if (e.key === 'Enter') handleSave();
             if (e.key === 'Escape') handleCancel();
           }}
-          className={`font-medium text-slate-800 bg-white border border-indigo-200 rounded px-2 py-1 outline-none focus:ring-2 focus:ring-indigo-500 w-full ${inputClassName}`}
+          className={cn(
+            "font-medium text-slate-800 bg-white border border-primary/30 rounded px-2 py-1 outline-none focus:ring-2 focus:ring-primary w-full",
+            inputClassName
+          )}
           placeholder={placeholder}
         />
         <div className="flex items-center gap-1 shrink-0">
           <button 
             type="button"
             onClick={handleSave} 
-            className="p-1.5 text-white bg-indigo-600 hover:bg-indigo-700 rounded-md shadow-sm transition-colors"
+            className="p-1.5 text-white bg-primary hover:bg-primary-hover rounded-md shadow-sm transition-colors"
             title="Save"
           >
             <CheckIcon className="w-4 h-4"/>
@@ -68,7 +72,7 @@ export const EditableText: React.FC<EditableTextProps> = ({
           <button 
             type="button"
             onClick={handleCancel} 
-            className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
+            className="p-1.5 text-slate-400 hover:text-danger hover:bg-danger-light rounded-md transition-colors"
             title="Cancel"
           >
             <CloseIcon className="w-4 h-4"/>
@@ -79,10 +83,10 @@ export const EditableText: React.FC<EditableTextProps> = ({
   }
 
   return (
-    <div className={`group flex items-center gap-2 ${className}`}>
+    <div className={cn("group flex items-center gap-2", className)}>
       <Component 
         onClick={() => setIsEditing(true)}
-        className={`cursor-pointer hover:text-indigo-600 transition-colors ${textClassName}`}
+        className={cn("cursor-pointer hover:text-primary transition-colors", textClassName)}
         title="Click to edit"
       >
         {value || <span className="text-slate-400 italic font-normal">{placeholder}</span>}
@@ -90,7 +94,7 @@ export const EditableText: React.FC<EditableTextProps> = ({
       <button
         type="button"
         onClick={() => setIsEditing(true)}
-        className="text-slate-300 opacity-0 group-hover:opacity-100 hover:text-indigo-600 transition-all p-1"
+        className="text-slate-300 opacity-0 group-hover:opacity-100 hover:text-primary transition-all p-1"
         aria-label="Edit"
       >
         <EditSquareIcon className="w-3.5 h-3.5"/>
