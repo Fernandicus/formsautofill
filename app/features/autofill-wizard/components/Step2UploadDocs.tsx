@@ -23,7 +23,6 @@ const processImages = async (docs: File[]): Promise<File[]> => {
         const binarizedCanvas = await getBinarizedCanvas(doc);
         const result = await Tesseract.recognize(binarizedCanvas, 'eng');
         const text = result.data.text;
-        console.log("TEXT FROM IMAGE \n", text);
         return new File([text], `${doc.name}.txt`, { type: 'text/plain' });
       } catch (err) {
         console.error("Error processing image:", err);

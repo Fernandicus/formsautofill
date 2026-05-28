@@ -6,7 +6,7 @@ import { EditableText } from '@/app/shared/components/EditableText';
 type FieldItemProps = {
   field: UserField;
   onUpdate: (key: string, value: string) => void;
-  onRemove: () => void;
+  onRemove?: () => void;
 };
 
 export const FieldItem: React.FC<FieldItemProps> = ({ field, onUpdate, onRemove }) => {
@@ -28,16 +28,18 @@ export const FieldItem: React.FC<FieldItemProps> = ({ field, onUpdate, onRemove 
           inputClassName="text-sm"
         />
       </div>
-      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity focus-within:opacity-100 self-center">
-        <button 
-          type="button"
-          onClick={onRemove}
-          className="text-slate-300 hover:text-red-500 hover:bg-white transition-colors p-2 rounded-md"
-          title="Remove"
-        >
-          <TrashIcon className="w-4 h-4"/>
-        </button>
-      </div>
+      {onRemove && (
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity focus-within:opacity-100 self-center">
+          <button 
+            type="button"
+            onClick={onRemove}
+            className="text-slate-300 hover:text-red-500 hover:bg-white transition-colors p-2 rounded-md"
+            title="Remove"
+          >
+            <TrashIcon className="w-4 h-4"/>
+          </button>
+        </div>
+      )}
     </div>
   );
 };

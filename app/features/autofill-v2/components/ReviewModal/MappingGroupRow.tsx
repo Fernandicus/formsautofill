@@ -6,10 +6,12 @@ type MappingGroupRowProps = {
   label: string;
   mappings: FieldMapping[];
   onToggle: (index: number) => void;
+  hideCheckbox?: boolean;
+  forceEnabled?: boolean;
 };
 
-export const MappingGroupRow: React.FC<MappingGroupRowProps> = ({ label, mappings, onToggle }) => {
-  const isSelected = mappings.some(m => Boolean(m.userValue));
+export const MappingGroupRow: React.FC<MappingGroupRowProps> = ({ label, mappings, onToggle, hideCheckbox, forceEnabled }) => {
+  const isSelected = forceEnabled ? true : mappings.some(m => Boolean(m.userValue));
   const isSuggested = mappings.some(m => Boolean(m.isSuggestion));
 
   const containerClasses = isSelected 
@@ -22,15 +24,17 @@ export const MappingGroupRow: React.FC<MappingGroupRowProps> = ({ label, mapping
 
   return (
     <div className={`flex items-start gap-4 p-4 rounded-xl border transition-all duration-200 ${containerClasses}`}>
-      <div className="pt-2">
-        <input 
-            type="checkbox" 
-            checked={isSelected} 
-            onChange={() => mappings.forEach((m, i) => { if (Boolean(m.userValue) === isSelected) onToggle(i); })}
-            aria-label={`Toggle auto-fill for ${label}`}
-            className={`w-5 h-5 rounded focus:ring-offset-0 transition-colors shadow-sm cursor-pointer ${checkboxClasses}`}
-        />
-      </div>
+      {!hideCheckbox && (
+        <div className="pt-2">
+          <input 
+              type="checkbox" 
+              checked={isSelected} 
+              onChange={() => mappings.forEach((m, i) => { if (Boolean(m.userValue) === isSelected) onToggle(i); })}
+              aria-label={`Toggle auto-fill for ${label}`}
+              className={`w-5 h-5 rounded focus:ring-offset-0 transition-colors shadow-sm cursor-pointer ${checkboxClasses}`}
+          />
+        </div>
+      )}
       <div className="flex-1 min-w-0 space-y-2">
         <div className="flex justify-between items-center gap-2">
             <label className="text-xs font-bold text-slate-600 uppercase tracking-wider truncate">

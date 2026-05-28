@@ -1,5 +1,7 @@
 import React, { useRef } from 'react';
 import { UploadIcon } from '@/icons';
+import { MappingGroupRow } from '../../autofill-v2/components/ReviewModal/MappingGroupRow';
+import { AddFieldForm } from '../../profile/components/DataProfile/AddFieldForm';
 
 type Step1UploadPdfProps = {
   onUpload: (file: File) => void;
