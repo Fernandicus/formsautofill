@@ -1,75 +1,67 @@
 'use client';
 
 import React from 'react';
-import { DataProfile } from './features/profile/components/DataProfile';
-import { ReviewModal } from './features/autofill-v2/components/ReviewModal';
-import { StatusOverlay } from './shared/components/StatusOverlay';
-import { useDataGroups } from './features/profile/hooks/useDataGroups';
-import { usePdfProcessing } from './features/autofill-v2/hooks/usePdfProcessing';
 import { AppHeader } from './shared/components/AppHeader';
-import { UserOnboarding } from './features/profile/components/UserOnboarding';
-import { useOnboarding } from './features/profile/hooks/useOnboarding';
+import { useWizardWorkflow } from './features/autofill-wizard/hooks/useWizardWorkflow';
+import { Stepper } from './features/autofill-wizard/components/Stepper';
+import { Step1UploadPdf } from './features/autofill-wizard/components/Step1UploadPdf';
+import { Step2UploadDocs } from './features/autofill-wizard/components/Step2UploadDocs';
+import { Step3Review } from './features/autofill-wizard/components/Step3Review';
+import { Step4Download } from './features/autofill-wizard/components/Step4Download';
+import { StatusOverlay } from './shared/components/StatusOverlay';
 
 const App: React.FC = () => {
   const {
-    groups, 
-    addGroup, 
-    updateGroup, 
-    deleteGroup, 
-    duplicateGroup,
-    saveScrapedFields,
-    createGroupWithData
-  } = useDataGroups();
-
-  const { hasCompletedOnboarding, completeOnboarding } = useOnboarding();
-
-  const handleOnboardingComplete = (fields: { key: string, value: string }[]) => {
-    if (fields.length > 0) {
-      createGroupWithData('Personal Info', fields);
-    }
-    completeOnboarding();
-  };
-
-  const {
-    status,
-    mappings,
-    pdfLanguage,
-    showReview,
-    handleFileChange,
+    state,
+    handleMainPdfUpload,
+    processAllAndMap,
     handleConfirmFill,
-    closeStatusModal,
-    cancelReview,
-  } = usePdfProcessing({ groups, saveScrapedFields });
+    resetWizard,
+  } = useWizardWorkflow();
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-indigo-100 selection:text-indigo-700 pb-20">
-      <AppHeader onFileSelect={handleFileChange} />
+      <AppHeader />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <DataProfile 
-          groups={groups} 
-          addGroup={addGroup}
-          updateGroup={updateGroup}
-          deleteGroup={deleteGroup}
-          duplicateGroup={duplicateGroup}
-        />
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-4">
+        {state.currentStep < 4 && <Stepper currentStep={state.currentStep} />}
+
+        {state.currentStep === 1 && (
+          <Step1UploadPdf onUpload={handleMainPdfUpload} />
+        )}
+
+        {state.currentStep === 2 && (
+          <Step2UploadDocs 
+            onContinue={processAllAndMap} 
+            isProcessing={state.isProcessing} 
+          />
+        )}
+
+        {state.currentStep === 3 && (
+          <Step3Review 
+            mappings={state.mappings}
+            supportingDocs={state.supportingDocs}
+            onConfirm={handleConfirmFill}
+            isProcessing={state.isProcessing}
+          />
+        )}
+
+        {state.currentStep === 4 && (
+          <Step4Download 
+            downloadUrl={state.generatedPdfUrl}
+            onRestart={resetWizard}
+          />
+        )}
       </main>
 
-      {showReview && (
-        <ReviewModal 
-          mappings={mappings} 
-          fromLanguage={pdfLanguage}
-          onConfirm={handleConfirmFill} 
-          onCancel={cancelReview} 
-        />
+      {/* Show processing modal */}
+      {state.isProcessing && (
+        <StatusOverlay status={{ step: 'processing', message: state.loadingMessage }} onClose={() => {}} />
       )}
 
-      <StatusOverlay status={status} onClose={closeStatusModal} />
-
-      {!hasCompletedOnboarding && (
-        <UserOnboarding 
-          onComplete={handleOnboardingComplete} 
-          onSkip={completeOnboarding} 
-        />
+      {/* Show error modal if any */}
+      {state.error && (
+        <StatusOverlay status={{ step: 'error', message: state.error }} onClose={() => {}} />
       )}
     </div>
   );
