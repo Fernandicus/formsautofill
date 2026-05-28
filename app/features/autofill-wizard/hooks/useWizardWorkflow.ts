@@ -2,28 +2,10 @@ import { useCallback } from 'react';
 import { useWizardState } from './useWizardState';
 import { useDocumentExtraction } from './useDocumentExtraction';
 import { extractFormFields, generateMarkedPdfBase64, fillPdf } from '@/app/features/autofill-v2/services/pdfService';
-import { FieldMapping, UserField } from '@/app/shared/types';
+import { FieldMapping } from '@/app/shared/types';
 import { logger } from '@/app/shared/utils/logger';
-
-const mergeGeminiMappings = (pdfFields: any[], geminiMappings: FieldMapping[]): FieldMapping[] => {
-  return pdfFields.map(field => {
-      const foundMapping = geminiMappings.find(mapping => mapping.pdfFieldName === field.name);
-
-      if (foundMapping) {
-          return foundMapping;
-      }
-
-      return {
-          pdfFieldName: field.name,
-          userValue: '',
-          label: field.label || field.name,
-          isSuggestion: false,
-          confidence: 'low',
-          type: field.type,
-          options: field.options
-      };
-  });
-};
+import { mergeGeminiMappings } from '../utils/mappingUtils';
+import { fetchMappedFields } from '../services/wizardApiService';
 
 export const useWizardWorkflow = () => {
   const [state, dispatch] = useWizardState();
@@ -57,22 +39,12 @@ export const useWizardWorkflow = () => {
 
       // 4. Send everything to Gemini Map API
       dispatch({ type: 'SET_PROCESSING', payload: { isProcessing: true, message: 'Matching your data to the form...' } });
-      const response = await fetch('/api/autofill/map', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            pdfFields,
-            userFields: extractedFields.map(f => ({ key: f.key, value: f.value })),
-            markedBase64: markedPdfBase64
-        })
-      });
+      const { mappings: generatedMappings, detectedLanguage } = await fetchMappedFields(
+        pdfFields,
+        extractedFields,
+        markedPdfBase64
+      );
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to map fields');
-      }
-
-      const { mappings: generatedMappings, detectedLanguage } = await response.json();
       const allMappings = mergeGeminiMappings(pdfFields, generatedMappings);
 
       dispatch({ 
