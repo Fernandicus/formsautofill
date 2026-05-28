@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { UploadIcon } from '@/icons';
 import { Button } from '@/app/shared/components/Button';
+import Tesseract from 'tesseract.js';
 
 type Step2UploadDocsProps = {
   onContinue: (files: File[]) => void;
@@ -10,9 +11,56 @@ type Step2UploadDocsProps = {
 const ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
+const getBinarizedCanvas = (file: File): Promise<HTMLCanvasElement> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        URL.revokeObjectURL(url);
+        return reject(new Error('Could not get canvas context'));
+      }
+      
+      ctx.drawImage(img, 0, 0);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+      
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+        const color = luminance > 128 ? 255 : 0;
+        
+        data[i] = color;
+        data[i + 1] = color;
+        data[i + 2] = color;
+      }
+      
+      ctx.putImageData(imageData, 0, 0);
+      URL.revokeObjectURL(url);
+      resolve(canvas);
+    };
+    
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Failed to load image'));
+    };
+    
+    img.src = url;
+  });
+};
+
 export const Step2UploadDocs: React.FC<Step2UploadDocsProps> = ({ onContinue, isProcessing }) => {
   const [docs, setDocs] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [isExtractingText, setIsExtractingText] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const addFiles = (files: FileList | File[]) => {
@@ -47,6 +95,43 @@ export const Step2UploadDocs: React.FC<Step2UploadDocsProps> = ({ onContinue, is
     }
   };
 
+  const handleContinue = async () => {
+    const hasImage = docs.some(doc => doc.type.startsWith('image/'));
+    
+    if (hasImage) {
+      setIsExtractingText(true);
+      setError(null);
+      try {
+        const processedFiles = await Promise.all(
+          docs.map(async (doc) => {
+            if (doc.type.startsWith('image/')) {
+              try {
+                const binarizedCanvas = await getBinarizedCanvas(doc);
+                const result = await Tesseract.recognize(binarizedCanvas, 'eng');
+                const text = result.data.text;
+                console.log("TEXT FROM IMAGE \n", text);
+                return new File([text], `${doc.name}.txt`, { type: 'text/plain' });
+              } catch (err) {
+                console.error("Error processing image:", err);
+                throw err;
+              }
+            }
+            return doc;
+          })
+        );
+        onContinue(processedFiles);
+      } catch (err) {
+        setError('Failed to extract text from image(s).');
+      } finally {
+        setIsExtractingText(false);
+      }
+    } else {
+      onContinue(docs);
+    }
+  };
+
+  const isButtonDisabled = docs.length === 0 || isProcessing || isExtractingText;
+
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 max-w-3xl mx-auto">
       <div className="flex justify-between items-start mb-6">
@@ -59,10 +144,10 @@ export const Step2UploadDocs: React.FC<Step2UploadDocsProps> = ({ onContinue, is
         </div>
         <Button 
           variant="primary" 
-          onClick={() => onContinue(docs)} 
-          disabled={docs.length === 0 || isProcessing}
+          onClick={handleContinue} 
+          disabled={isButtonDisabled}
         >
-          Continue
+          {isExtractingText ? 'Extracting text...' : 'Continue'}
         </Button>
       </div>
 
@@ -72,7 +157,9 @@ export const Step2UploadDocs: React.FC<Step2UploadDocsProps> = ({ onContinue, is
           <div className="flex flex-wrap gap-3">
             {docs.map((doc, idx) => (
               <div key={idx} className="flex items-center gap-2 border border-slate-200 rounded-lg px-3 py-2 text-sm bg-slate-50">
-                <span className="text-red-500 font-bold">PDF</span>
+                <span className="text-indigo-500 font-bold">
+                  {doc.type.includes('pdf') ? 'PDF' : doc.type.includes('image') ? 'IMG' : 'TXT'}
+                </span>
                 <span className="text-slate-700 font-medium">{doc.name}</span>
               </div>
             ))}
@@ -116,3 +203,4 @@ export const Step2UploadDocs: React.FC<Step2UploadDocsProps> = ({ onContinue, is
     </div>
   );
 };
+
