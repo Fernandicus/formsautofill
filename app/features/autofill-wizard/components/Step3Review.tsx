@@ -21,8 +21,14 @@ export const Step3Review: React.FC<Step3ReviewProps> = ({ mappings, supportingDo
     return Math.round((filled / mappings.length) * 100);
   }, [editedMappings, mappings]);
 
-  const missingMappings = editedMappings.filter(m => !m.userValue || m.userValue.trim() === '');
-  const filledMappings = editedMappings.filter(m => m.userValue && m.userValue.trim() !== '');
+  // Keep track of which fields were initially missing so they don't jump sections when edited.
+  const initiallyMissingKeys = useMemo(() => {
+    return new Set(mappings.filter(m => !m.userValue || m.userValue.trim() === '').map(m => m.pdfFieldName));
+  }, [mappings]);
+
+  const missingSectionMappings = editedMappings.filter(m => initiallyMissingKeys.has(m.pdfFieldName));
+  
+  const currentMissingCount = editedMappings.filter(m => !m.userValue || m.userValue.trim() === '').length;
 
   const groupMappings = (mappingsToGroup: FieldMapping[]) => {
     const groups = new Map<string, FieldMapping[]>();
@@ -36,8 +42,7 @@ export const Step3Review: React.FC<Step3ReviewProps> = ({ mappings, supportingDo
     return Array.from(groups.values());
   };
 
-  const missingGroups = useMemo(() => groupMappings(missingMappings), [missingMappings]);
-  const filledGroups = useMemo(() => groupMappings(filledMappings), [filledMappings]);
+  const missingGroups = useMemo(() => groupMappings(missingSectionMappings), [missingSectionMappings]);
 
   const handleInputChange = (pdfFieldName: string, value: string) => {
     setEditedMappings(prev => prev.map(m => m.pdfFieldName === pdfFieldName ? { ...m, userValue: value } : m));
@@ -79,10 +84,10 @@ export const Step3Review: React.FC<Step3ReviewProps> = ({ mappings, supportingDo
         </div>
       )}
 
-      {missingMappings.length > 0 && (
+      {missingSectionMappings.length > 0 && (
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 mb-8">
           <div className="text-xs font-bold text-amber-600 mb-4 uppercase tracking-wide">
-            Missing {missingMappings.length} Fields
+            Missing {currentMissingCount} Fields
           </div>
           <div className="space-y-4">
             {missingGroups.map((group, idx) => {
@@ -118,44 +123,6 @@ export const Step3Review: React.FC<Step3ReviewProps> = ({ mappings, supportingDo
         </div>
       )}
 
-      {filledMappings.length > 0 && (
-        <div>
-          <div className="text-xs font-bold text-slate-400 mb-4 uppercase tracking-wide">
-            Filled Fields
-          </div>
-          <div className="space-y-2">
-            {filledGroups.map((group, idx) => {
-              const first = group[0];
-              if (first.type === 'CheckBox' && group.length > 1) {
-                return (
-                  <MappingGroupRow
-                    key={idx}
-                    label={first.label || 'Group'}
-                    mappings={group}
-                    onToggle={(index) => {
-                      const m = group[index];
-                      handleInputChange(m.pdfFieldName, m.userValue === 'Yes' ? '' : 'Yes');
-                    }}
-                    hideCheckbox={true}
-                    forceEnabled={true}
-                  />
-                );
-              }
-
-              const m = first;
-              return (
-                <MappingRow
-                  key={idx}
-                  mapping={m}
-                  onChange={(val) => handleInputChange(m.pdfFieldName, val)}
-                  hideCheckbox={true}
-                  forceEnabled={true}
-                />
-              );
-            })}
-          </div>
-        </div>
-      )}
     </div>
   );
 };
