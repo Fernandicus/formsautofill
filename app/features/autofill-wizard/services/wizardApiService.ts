@@ -42,3 +42,26 @@ export const fetchMappedFields = async (
 
   return response.json();
 };
+
+export const fetchMappedFieldsV3 = async (
+  pdfFields: any[], 
+  extractedFields: UserField[], 
+  markedMarkdown: string
+): Promise<{ mappings: any[], detectedLanguage: string }> => {
+  const response = await fetch('/api/autofill/map-v3', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        pdfFields,
+        userFields: extractedFields.map(f => ({ key: f.key, value: f.value })),
+        markedMarkdown
+    })
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || 'Failed to map fields (v3)');
+  }
+
+  return response.json();
+};

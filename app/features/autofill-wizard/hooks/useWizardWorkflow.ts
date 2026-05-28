@@ -1,11 +1,11 @@
 import { useCallback } from 'react';
 import { useWizardState } from './useWizardState';
 import { useDocumentExtraction } from './useDocumentExtraction';
-import { extractFormFields, generateMarkedPdfBase64, fillPdf } from '@/app/features/autofill-v2/services/pdfService';
+import { extractFormFields, generateMarkdownFromPdf, fillPdf } from '@/app/features/autofill-v2/services/pdfService';
 import { FieldMapping } from '@/app/shared/types';
 import { logger } from '@/app/shared/utils/logger';
 import { mergeGeminiMappings } from '../utils/mappingUtils';
-import { fetchMappedFields } from '../services/wizardApiService';
+import { fetchMappedFieldsV3 } from '../services/wizardApiService';
 
 export const useWizardWorkflow = () => {
   const [state, dispatch] = useWizardState();
@@ -33,16 +33,16 @@ export const useWizardWorkflow = () => {
         throw new Error('No fillable forms found in this PDF.');
       }
 
-      // 3. Generate marked PDF base64 for Gemini visual context
+      // 3. Generate Markdown with embedded markers for Gemini context
       dispatch({ type: 'SET_PROCESSING', payload: { isProcessing: true, message: 'Analyzing form structure...' } });
-      const markedPdfBase64 = await generateMarkedPdfBase64(state.mainPdf, pdfFields);
+      const markedMarkdown = await generateMarkdownFromPdf(state.mainPdf, pdfFields);
 
-      // 4. Send everything to Gemini Map API
+      // 4. Send everything to Gemini Map API (v3)
       dispatch({ type: 'SET_PROCESSING', payload: { isProcessing: true, message: 'Matching your data to the form...' } });
-      const { mappings: generatedMappings, detectedLanguage } = await fetchMappedFields(
+      const { mappings: generatedMappings, detectedLanguage } = await fetchMappedFieldsV3(
         pdfFields,
         extractedFields,
-        markedPdfBase64
+        markedMarkdown
       );
 
       const allMappings = mergeGeminiMappings(pdfFields, generatedMappings);
