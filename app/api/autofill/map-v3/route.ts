@@ -103,6 +103,9 @@ export async function POST(request: Request) {
     const fieldMetadata = buildFieldMetadata(pdfFields);
     const prompt = buildMappingPrompt(userFields, fieldMetadata, markedMarkdown);
 
+    logger.info('GEMINI_API', 'Sending data to Gemini for mapping (v3)...');
+    const startTime = performance.now();
+
     const response = await ai.models.generateContent({
       model: GEMINI_MODEL,
       contents: {
@@ -148,6 +151,9 @@ export async function POST(request: Request) {
         }
       }
     });
+
+    const endTime = performance.now();
+    logger.info('GEMINI_API', `Received response from Gemini in ${(endTime - startTime).toFixed(2)}ms`);
 
     const rawText = response.text || "{\"mappings\":[], \"detectedLanguage\":\"en\"}";
     const result = parseMappingResponse(rawText, pdfFields);

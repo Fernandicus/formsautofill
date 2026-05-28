@@ -51,6 +51,9 @@ export async function POST(request: Request) {
     const ai = getGeminiClient();
     const prompt = buildExtractionPrompt();
 
+    logger.info('GEMINI_API', 'Sending data to Gemini for extraction...');
+    const startTime = performance.now();
+
     const response = await ai.models.generateContent({
       model: GEMINI_MODEL,
       contents: {
@@ -73,6 +76,9 @@ export async function POST(request: Request) {
         }
       }
     });
+
+    const endTime = performance.now();
+    logger.info('GEMINI_API', `Received response from Gemini in ${(endTime - startTime).toFixed(2)}ms`);
 
     const rawText = response.text || "[]";
     const result = parseExtractionResponse(rawText);

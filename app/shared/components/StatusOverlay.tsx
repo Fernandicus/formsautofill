@@ -49,6 +49,20 @@ export const StatusOverlay: React.FC<StatusOverlayProps> = ({ status, onClose })
     message
   } = useStatusOverlayLogic(status);
 
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isProcessing) {
+      const start = Date.now();
+      setElapsed(0);
+      interval = setInterval(() => {
+        setElapsed(Math.floor((Date.now() - start) / 1000));
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isProcessing]);
+
   if (!show) return null;
 
   return (
@@ -73,8 +87,9 @@ export const StatusOverlay: React.FC<StatusOverlayProps> = ({ status, onClose })
             <h3 className="text-lg font-bold text-slate-800 mb-2">
               {title}
             </h3>
-            <p className="text-slate-500 text-sm mb-6 h-5 transition-all">
-              {message}
+            <p className="text-slate-500 text-sm mb-6 h-10 transition-all flex flex-col items-center justify-center">
+              <span>{message}</span>
+              <span className="text-xs font-mono mt-1 text-slate-400">Time elapsed: {elapsed}s</span>
             </p>
             
             {/* Progress Bar */}

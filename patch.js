@@ -1,31 +1,12 @@
-import React, { useState, useMemo } from 'react';
-import { FieldMapping } from '@/app/shared/types';
-import { Button } from '@/app/shared/components/Button';
-import { AlertCircleIcon, CheckCircle } from 'lucide-react';
+const fs = require('fs');
+const file = 'app/features/autofill-wizard/components/Step3Review.tsx';
+let code = fs.readFileSync(file, 'utf8');
 
-type Step3ReviewProps = {
-  mappings: FieldMapping[];
-  supportingDocs: File[];
-  onConfirm: (finalMappings: FieldMapping[]) => void;
-  isProcessing: boolean;
-};
-
-export const Step3Review: React.FC<Step3ReviewProps> = ({ mappings, supportingDocs, onConfirm, isProcessing }) => {
-  const [editedMappings, setEditedMappings] = useState<FieldMapping[]>(mappings);
-
-  const percentage = useMemo(() => {
-    if (mappings.length === 0) return 100;
-    const filled = editedMappings.filter(m => m.userValue && m.userValue.trim() !== '').length;
-    return Math.round((filled / mappings.length) * 100);
-  }, [editedMappings, mappings]);
-
-  const missingMappings = editedMappings.filter(m => !m.userValue || m.userValue.trim() === '');
-  const filledMappings = editedMappings.filter(m => m.userValue && m.userValue.trim() !== '');
-
+const groupingLogic = `
   const groupMappings = (mappings: FieldMapping[]) => {
     const groups = new Map<string, FieldMapping[]>();
     mappings.forEach(m => {
-      const groupKey = (m.type === 'CheckBox' && m.label) ? `group_${m.label}` : `single_${m.pdfFieldName}`;
+      const groupKey = (m.type === 'CheckBox' && m.label) ? \`group_\${m.label}\` : \`single_\${m.pdfFieldName}\`;
       if (!groups.has(groupKey)) {
         groups.set(groupKey, []);
       }
@@ -34,54 +15,16 @@ export const Step3Review: React.FC<Step3ReviewProps> = ({ mappings, supportingDo
     return Array.from(groups.values());
   };
 
-  const missingGroups = useMemo(() => groupMappings(missingMappings), [missingMappings]);
-  const filledGroups = useMemo(() => groupMappings(filledMappings), [filledMappings]);
+  const missingGroups = groupMappings(missingMappings);
+  const filledGroups = groupMappings(filledMappings);
+`;
 
-  const handleInputChange = (pdfFieldName: string, value: string) => {
-    setEditedMappings(prev => prev.map(m => m.pdfFieldName === pdfFieldName ? { ...m, userValue: value } : m));
-  };
+code = code.replace(
+  "const handleInputChange = (pdfFieldName: string, value: string) => {",
+  groupingLogic + "\n  const handleInputChange = (pdfFieldName: string, value: string) => {"
+);
 
-  return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 max-w-3xl mx-auto">
-      <div className="flex justify-between items-start mb-6">
-        <div className="flex items-center gap-3">
-          <AlertCircleIcon className="w-8 h-8 text-orange-500" />
-          <h2 className="text-3xl font-bold text-slate-900">{percentage}% Completed</h2>
-        </div>
-        <Button 
-          variant="primary" 
-          onClick={() => onConfirm(editedMappings)}
-          disabled={isProcessing}
-        >
-          Continue
-        </Button>
-      </div>
-
-      <p className="text-slate-600 mb-6">
-        {percentage < 100 
-          ? "We are missing some data that we don't have. You can complete them manually."
-          : "All fields look good! Review the filled data if you want."}
-      </p>
-
-      {supportingDocs.length > 0 && (
-        <div className="mb-8">
-          <div className="text-xs font-bold text-slate-400 mb-3 uppercase">Uploaded Documents</div>
-          <div className="flex flex-wrap gap-3">
-            {supportingDocs.map((doc, idx) => (
-              <div key={idx} className="flex items-center gap-2 border border-slate-200 rounded-lg px-3 py-2 text-sm bg-slate-50">
-                <span className="text-red-500 font-bold">PDF</span>
-                <span className="text-slate-700 font-medium">{doc.name}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {missingMappings.length > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 mb-8">
-          <div className="text-xs font-bold text-amber-600 mb-4 uppercase tracking-wide">
-            Missing {missingMappings.length} Fields
-          </div>
+const missingReplace = `
           <div className="space-y-4">
             {missingGroups.map((group, idx) => {
               const first = group[0];
@@ -92,14 +35,14 @@ export const Step3Review: React.FC<Step3ReviewProps> = ({ mappings, supportingDo
                     <div className="pt-1 flex flex-wrap gap-2">
                       {group.map((m, mIdx) => (
                         <button
-                          key={`${m.pdfFieldName}-${mIdx}`}
+                          key={\`\${m.pdfFieldName}-\${mIdx}\`}
                           type="button"
                           onClick={() => handleInputChange(m.pdfFieldName, m.userValue === 'Yes' ? '' : 'Yes')}
-                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold border transition-colors cursor-pointer ${
+                          className={\`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold border transition-colors cursor-pointer \${
                             m.userValue === 'Yes'
                               ? 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-sm hover:bg-indigo-100'
                               : 'bg-slate-50 border-slate-200 text-slate-400 hover:bg-slate-100 hover:text-slate-600'
-                          }`}
+                          }\`}
                         >
                           {m.userValue === 'Yes' ? (
                             <CheckCircle className="w-4 h-4 shrink-0" />
@@ -125,14 +68,14 @@ export const Step3Review: React.FC<Step3ReviewProps> = ({ mappings, supportingDo
                         const displayLabel = m.radioOptionsMap?.[option] || option;
                         return (
                           <button
-                            key={`${option}-${optIdx}`}
+                            key={\`\${option}-\${optIdx}\`}
                             type="button"
                             onClick={() => handleInputChange(m.pdfFieldName, isOptionSelected ? '' : option)}
-                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold border transition-colors cursor-pointer ${
+                            className={\`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold border transition-colors cursor-pointer \${
                               isOptionSelected
                                 ? 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-sm hover:bg-indigo-100'
                                 : 'bg-slate-50 border-slate-200 text-slate-400 hover:bg-slate-100 hover:text-slate-600'
-                            }`}
+                            }\`}
                           >
                             {isOptionSelected ? (
                               <CheckCircle className="w-4 h-4 shrink-0" />
@@ -150,21 +93,18 @@ export const Step3Review: React.FC<Step3ReviewProps> = ({ mappings, supportingDo
                       className="w-full border border-slate-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       value={m.userValue || ''}
                       onChange={(e) => handleInputChange(m.pdfFieldName, e.target.value)}
-                      placeholder={`Enter ${m.label}`}
+                      placeholder={\`Enter \${m.label}\`}
                     />
                   )}
                 </div>
               );
             })}
           </div>
-        </div>
-      )}
+`;
 
-      {filledMappings.length > 0 && (
-        <div>
-          <div className="text-xs font-bold text-slate-400 mb-4 uppercase tracking-wide">
-            Filled Fields
-          </div>
+code = code.replace(/<div className="space-y-4">\s*\{missingMappings\.map\(\(m, idx\) => \([\s\S]*?\}\)\}\s*<\/div>/, missingReplace.trim());
+
+const filledReplace = `
           <div className="space-y-4">
             {filledGroups.map((group, idx) => {
               const first = group[0];
@@ -179,8 +119,9 @@ export const Step3Review: React.FC<Step3ReviewProps> = ({ mappings, supportingDo
               );
             })}
           </div>
-        </div>
-      )}
-    </div>
-  );
-};
+`;
+
+code = code.replace(/<div className="space-y-4">\s*\{filledMappings\.map\(\(m, idx\) => \([\s\S]*?\}\)\}\s*<\/div>/, filledReplace.trim());
+
+fs.writeFileSync(file, code);
+console.log('Done');
