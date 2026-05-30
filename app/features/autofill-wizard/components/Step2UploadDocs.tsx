@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import { UploadIcon } from '@/icons';
 import { Button } from '@/app/shared/components/Button';
 import Tesseract from 'tesseract.js';
+import { FileText, Image as ImageIcon, File as FileIcon } from 'lucide-react';
 
 import { getBinarizedCanvas } from '../utils/imageProcessing';
 
@@ -116,14 +117,25 @@ export const Step2UploadDocs: React.FC<Step2UploadDocsProps> = ({ onContinue, is
         <div className="mb-6">
           <div className="text-xs font-bold text-slate-400 mb-3 uppercase">Uploaded Documents</div>
           <div className="flex flex-wrap gap-3">
-            {docs.map((doc, idx) => (
-              <div key={idx} className="flex items-center gap-2 border border-slate-200 rounded-lg px-3 py-2 text-sm bg-slate-50">
-                <span className="text-indigo-500 font-bold">
-                  {doc.type.includes('pdf') ? 'PDF' : doc.type.includes('image') ? 'IMG' : 'TXT'}
-                </span>
-                <span className="text-slate-700 font-medium">{doc.name}</span>
-              </div>
-            ))}
+            {docs.map((doc, idx) => {
+              let Icon = FileIcon;
+              let iconColor = 'text-slate-500';
+
+              if (doc.type.includes('pdf')) {
+                Icon = FileText;
+                iconColor = 'text-red-500';
+              } else if (doc.type.includes('image')) {
+                Icon = ImageIcon;
+                iconColor = 'text-indigo-500';
+              }
+
+              return (
+                <div key={idx} className="flex items-center gap-2 border border-slate-200 rounded-lg px-3 py-2 text-sm bg-slate-50">
+                  <Icon size={18} className={iconColor} strokeWidth={2.5} />
+                  <span className="text-slate-700 font-medium">{doc.name}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
