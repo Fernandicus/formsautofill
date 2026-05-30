@@ -1,6 +1,6 @@
 ---
 name: ui-consistency
-description: Enforce UI consistency by reusing existing React components, adhering to the project's specific component taxonomy (Item/Base/Specific), and following the established design system. Trigger this when building new UI elements or modifying layouts to prevent duplicated components and redundant styles.
+description: Enforce UI consistency by reusing existing React components, adhering to the project's specific component taxonomy (Item/Base/Specific), and following the established design system. Trigger this when building new UI elements or modifying them to prevent duplicated components and redundant styles.
 risk: low
 source: workspace
 date_added: "2026-05-27"
@@ -20,8 +20,9 @@ date_added: "2026-05-27"
 ## Instructions
 
 ### 1. Component Reusability & Discovery
-- **Search First:** Always check the `app/shared/components` directory (or equivalent UI folder) before creating a new component.
-- **Reuse and Extend:** If a component already exists, use it. If it almost fits your needs, extend it by adding optional props or variants rather than building a new one from scratch.
+- **1.1 Search First:** Always check the `**/components` folders (or equivalent UI folder) before creating a new component.
+- **1.2 Reuse and Extend:** If a component already exists, use it. If it almost fits your needs, extend it by adding optional props or variants rather than building a new one from scratch.
+- **1.3 Extract Sub-components:** If an existing component contains a useful element that could be useful to build the new component and but it's tightly coupled, refactor it to extract that element into a standalone Item or Base component so it can be reused.
 
 ### 2. Component Taxonomy
 Adhere to the established modular component structure when creating new pieces:
