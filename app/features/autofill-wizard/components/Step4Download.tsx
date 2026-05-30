@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button } from '@/app/shared/components/Button';
 import { DownloadIcon, RefreshCwIcon } from 'lucide-react';
+import { WizardCard } from './base/WizardCard';
 
 type Step4DownloadProps = {
   downloadUrl: string | null;
@@ -9,7 +10,7 @@ type Step4DownloadProps = {
 
 export const Step4Download: React.FC<Step4DownloadProps> = ({ downloadUrl, onRestart }) => {
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-12 max-w-3xl mx-auto text-center">
+    <WizardCard className="p-12 text-center">
       <h2 className="text-3xl font-bold text-slate-900 mb-4">Form ready to download!</h2>
       <p className="text-slate-600 mb-10 max-w-lg mx-auto">
         The AI has integrated your information directly into the original PDF form. Review it and download it ready to sign.
@@ -30,6 +31,6 @@ export const Step4Download: React.FC<Step4DownloadProps> = ({ downloadUrl, onRes
           Fill another PDF
         </Button>
       </div>
-    </div>
+    </WizardCard>
   );
 };

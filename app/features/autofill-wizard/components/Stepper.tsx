@@ -1,6 +1,7 @@
 import React from 'react';
 import { WizardStep } from '../hooks/useWizardState';
 import { FileText, Database, CheckCircle2 } from 'lucide-react';
+import { WizardCard } from './base/WizardCard';
 
 type StepperProps = {
   currentStep: WizardStep;
@@ -29,7 +30,7 @@ export const Stepper: React.FC<StepperProps> = ({ currentStep }) => {
   ];
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 max-w-3xl mx-auto mb-8 w-full flex flex-col sm:flex-row gap-6 sm:gap-8">
+    <WizardCard className="mb-8 flex flex-col sm:flex-row gap-6 sm:gap-8">
       {steps.map((step) => {
         const isActive = currentStep === step.num;
         const isCompleted = currentStep > step.num;
@@ -57,6 +58,6 @@ export const Stepper: React.FC<StepperProps> = ({ currentStep }) => {
           </div>
         );
       })}
-    </div>
+    </WizardCard>
   );
 };

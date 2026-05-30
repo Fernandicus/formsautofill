@@ -8,7 +8,16 @@ import { EditableText } from '@/app/shared/components/EditableText';
 import { Modal, ModalHeader, ModalBody, ModalFooter } from '@/app/shared/components/Modal';
 import { StatusOverlay } from '@/app/shared/components/StatusOverlay';
 import { Stepper } from '@/app/features/autofill-wizard/components/Stepper';
-import { CheckIcon, CloseIcon, SearchIcon, UserIcon, EditSquareIcon } from '@/icons';
+import { FileDropzone } from '@/app/features/autofill-wizard/components/base/FileDropzone';
+import { UploadedFileList } from '@/app/features/autofill-wizard/components/base/UploadedFileList';
+import { WizardCard } from '@/app/features/autofill-wizard/components/base/WizardCard';
+import { WizardStepHeader } from '@/app/features/autofill-wizard/components/items/WizardStepHeader';
+import { AddFieldForm } from '@/app/features/profile/components/DataProfile/AddFieldForm';
+import { FieldItem } from '@/app/features/profile/components/DataProfile/FieldItem';
+import { GroupCard } from '@/app/features/profile/components/DataProfile/GroupCard';
+import { MappingRow } from '@/app/features/autofill-v2/components/ReviewModal/MappingRow';
+import { DataGroup, FieldMapping } from '@/app/shared/types';
+import { CheckIcon, CloseIcon, SearchIcon, UserIcon, EditSquareIcon, UploadIcon } from '@/icons';
 
 const ComponentsPage = () => {
   if (process.env.NODE_ENV === 'production') {
@@ -18,6 +27,22 @@ const ComponentsPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isStatusOverlayOpen, setIsStatusOverlayOpen] = useState(false);
   const [editableText, setEditableText] = useState('Click to edit me');
+  const [mockFiles, setMockFiles] = useState<File[]>([]);
+  const [mockGroup, setMockGroup] = useState<DataGroup>({
+    id: 'mock',
+    name: 'Mock Group',
+    fields: [
+      { id: '1', key: 'Name', value: 'John Doe' },
+      { id: '2', key: 'Email', value: 'john@example.com' }
+    ],
+    isExpanded: true
+  });
+  const [mockMapping, setMockMapping] = useState<FieldMapping>({
+    pdfFieldName: 'full_name',
+    userValue: 'John Doe',
+    confidence: 'high',
+    label: 'Full Name'
+  });
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
@@ -117,6 +142,70 @@ const ComponentsPage = () => {
               <p className="text-sm font-semibold text-slate-500 mb-4">Step 3 Active (Completed)</p>
               <Stepper currentStep={3} />
             </div>
+          </div>
+        </section>
+
+        {/* --- Wizard Base Components --- */}
+        <section className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+          <h2 className="text-2xl font-bold text-slate-800 mb-6 border-b pb-4">Wizard Components</h2>
+          <div className="space-y-8">
+            <WizardCard>
+              <WizardStepHeader 
+                title="Example Wizard Step" 
+                description="This is an example of a WizardCard containing a WizardStepHeader."
+              />
+              <FileDropzone
+                icon={<UploadIcon className="w-8 h-8 text-indigo-500" />}
+                title="Upload Document"
+                description="Drag & drop or click to upload"
+                accept=".pdf,.png,.jpg"
+                onFilesAdded={(files) => {
+                  const newFiles = Array.from(files) as File[];
+                  setMockFiles(prev => [...prev, ...newFiles]);
+                }}
+              />
+              <div className="mt-4">
+                <UploadedFileList files={mockFiles} />
+              </div>
+            </WizardCard>
+          </div>
+        </section>
+
+        {/* --- Profile / Data Components --- */}
+        <section className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+          <h2 className="text-2xl font-bold text-slate-800 mb-6 border-b pb-4">Profile Data Components</h2>
+          <div className="space-y-8">
+            <div className="max-w-2xl">
+              <GroupCard 
+                group={mockGroup}
+                updateGroup={(g) => setMockGroup(g)}
+                deleteGroup={() => {}}
+                duplicateGroup={() => {}}
+              />
+            </div>
+            <div className="max-w-2xl bg-slate-50 p-6 rounded-xl border border-slate-200">
+              <h3 className="text-sm font-semibold text-slate-500 mb-4">Isolated Sub-components</h3>
+              <div className="space-y-4">
+                <FieldItem 
+                  field={{ id: '3', key: 'Phone', value: '+1 234 567 8900' }}
+                  onUpdate={() => {}}
+                  onRemove={() => {}}
+                />
+                <AddFieldForm onAdd={() => {}} />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* --- Review / Mapping Components --- */}
+        <section className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+          <h2 className="text-2xl font-bold text-slate-800 mb-6 border-b pb-4">Mapping Components</h2>
+          <div className="space-y-4 max-w-3xl">
+            <MappingRow 
+              mapping={mockMapping}
+              onToggle={() => setMockMapping(m => ({ ...m, userValue: m.userValue ? '' : 'John Doe' }))}
+              onChange={(val) => setMockMapping(m => ({ ...m, userValue: val }))}
+            />
           </div>
         </section>
 

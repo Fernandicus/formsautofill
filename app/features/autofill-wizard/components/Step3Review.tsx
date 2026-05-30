@@ -4,6 +4,8 @@ import { Button } from '@/app/shared/components/Button';
 import { AlertCircleIcon } from 'lucide-react';
 import { MappingRow } from '../../autofill-v2/components/ReviewModal/MappingRow';
 import { MappingGroupRow } from '../../autofill-v2/components/ReviewModal/MappingGroupRow';
+import { WizardCard } from './base/WizardCard';
+import { UploadedFileList } from './base/UploadedFileList';
 
 type Step3ReviewProps = {
   mappings: FieldMapping[];
@@ -49,7 +51,7 @@ export const Step3Review: React.FC<Step3ReviewProps> = ({ mappings, supportingDo
   };
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 max-w-3xl mx-auto">
+    <WizardCard>
       <div className="flex justify-between items-start mb-6">
         <div className="flex items-center gap-3">
           <AlertCircleIcon className="w-8 h-8 text-orange-500" />
@@ -70,19 +72,7 @@ export const Step3Review: React.FC<Step3ReviewProps> = ({ mappings, supportingDo
           : "All fields look good! Review the filled data if you want."}
       </p>
 
-      {supportingDocs.length > 0 && (
-        <div className="mb-8">
-          <div className="text-xs font-bold text-slate-400 mb-3 uppercase">Uploaded Documents</div>
-          <div className="flex flex-wrap gap-3">
-            {supportingDocs.map((doc, idx) => (
-              <div key={idx} className="flex items-center gap-2 border border-slate-200 rounded-lg px-3 py-2 text-sm bg-slate-50">
-                <span className="text-red-500 font-bold">PDF</span>
-                <span className="text-slate-700 font-medium">{doc.name}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      <UploadedFileList files={supportingDocs} />
 
       {missingSectionMappings.length > 0 && (
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 mb-8">
@@ -123,6 +113,6 @@ export const Step3Review: React.FC<Step3ReviewProps> = ({ mappings, supportingDo
         </div>
       )}
 
-    </div>
+    </WizardCard>
   );
 };
