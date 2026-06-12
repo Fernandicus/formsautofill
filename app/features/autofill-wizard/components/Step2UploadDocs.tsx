@@ -62,10 +62,17 @@ export const Step2UploadDocs: React.FC<Step2UploadDocsProps> = ({ onContinue, is
     }
   };
 
-  const isButtonDisabled = docs.length === 0 || isProcessing || isExtractingText;
+  const isProcessingState = isProcessing || isExtractingText;
+  const isButtonDisabled = docs.length === 0 || isProcessingState;
 
   return (
-    <WizardCard>
+    <WizardCard className="relative overflow-hidden min-h-[400px]">
+      {isProcessingState && (
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm">
+          <div className="processing-loader mb-8"></div>
+          <p className="text-lg font-bold text-primary animate-pulse mt-4">Processing your documents...</p>
+        </div>
+      )}
       <div className="flex justify-between items-start mb-6">
         <WizardStepHeader
           title="2. Upload your supporting documents"
@@ -81,8 +88,9 @@ export const Step2UploadDocs: React.FC<Step2UploadDocsProps> = ({ onContinue, is
           variant="primary" 
           onClick={handleContinue} 
           disabled={isButtonDisabled}
+          isLoading={isProcessingState}
         >
-          {isExtractingText ? 'Extracting text...' : 'Continue'}
+          {isProcessingState ? 'Processing...' : 'Continue'}
         </Button>
       </div>
 
@@ -98,6 +106,7 @@ export const Step2UploadDocs: React.FC<Step2UploadDocsProps> = ({ onContinue, is
         description="ID, Passport, utility bills, certificates (JPG, PNG, PDF)"
         accept=".pdf,.jpg,.jpeg,.png"
         multiple={true}
+        disabled={isProcessingState}
         onFilesAdded={addFiles}
       />
     </WizardCard>

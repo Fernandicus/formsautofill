@@ -209,6 +209,22 @@ const ComponentsPage = () => {
           </div>
         </section>
 
+        {/* --- Loaders --- */}
+        <section className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+          <h2 className="text-2xl font-bold text-slate-800 mb-6 border-b pb-4">Loaders</h2>
+          <div className="space-y-8">
+            <div>
+              <p className="text-sm font-semibold text-slate-500 mb-4">Processing Loader (Used in Step 2/3)</p>
+              <div className="p-8 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-center min-h-[160px]">
+                <div className="flex flex-col space-y-12 items-center">
+                  <div className="processing-loader"></div>
+                  <p className="text-sm font-semibold text-primary animate-pulse">Processing your documents...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* --- Overlays & Modals --- */}
         <section className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
           <h2 className="text-2xl font-bold text-slate-800 mb-6 border-b pb-4">Overlays & Modals</h2>

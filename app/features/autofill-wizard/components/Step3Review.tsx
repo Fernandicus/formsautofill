@@ -28,9 +28,29 @@ export const Step3Review: React.FC<Step3ReviewProps> = ({ mappings, supportingDo
     return new Set(mappings.filter(m => !m.userValue || m.userValue.trim() === '').map(m => m.pdfFieldName));
   }, [mappings]);
 
+  // Keep track of which fields were initially errors (invalid dropdown values).
+  const initiallyErrorKeys = useMemo(() => {
+    return new Set(mappings.filter(m => {
+      return (m.type === 'Dropdown' || m.type === 'RadioGroup') && 
+             m.options && 
+             m.options.length > 0 && 
+             m.userValue && 
+             !m.options.includes(m.userValue);
+    }).map(m => m.pdfFieldName));
+  }, [mappings]);
+
   const missingSectionMappings = editedMappings.filter(m => initiallyMissingKeys.has(m.pdfFieldName));
+  const errorSectionMappings = editedMappings.filter(m => initiallyErrorKeys.has(m.pdfFieldName));
   
   const currentMissingCount = editedMappings.filter(m => !m.userValue || m.userValue.trim() === '').length;
+  const currentErrorCount = editedMappings.filter(m => {
+    return initiallyErrorKeys.has(m.pdfFieldName) && 
+           (m.type === 'Dropdown' || m.type === 'RadioGroup') && 
+           m.options && 
+           m.options.length > 0 && 
+           m.userValue && 
+           !m.options.includes(m.userValue);
+  }).length;
 
   const groupMappings = (mappingsToGroup: FieldMapping[]) => {
     const groups = new Map<string, FieldMapping[]>();
@@ -67,12 +87,32 @@ export const Step3Review: React.FC<Step3ReviewProps> = ({ mappings, supportingDo
       </div>
 
       <p className="text-slate-600 mb-6">
-        {percentage < 100 
-          ? "We are missing some data that we don't have. You can complete them manually."
+        {percentage < 100 || errorSectionMappings.length > 0
+          ? "We are missing some data or have invalid entries. You can fix them manually."
           : "All fields look good! Review the filled data if you want."}
       </p>
 
       <UploadedFileList files={supportingDocs} />
+
+      {errorSectionMappings.length > 0 && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-6 mb-8">
+          <div className="text-xs font-bold text-red-600 mb-4 uppercase tracking-wide flex items-center gap-2">
+            <AlertCircleIcon className="w-4 h-4" />
+            Error in {currentErrorCount} Fields
+          </div>
+          <div className="space-y-4">
+            {errorSectionMappings.map((m, idx) => (
+              <MappingRow
+                key={`error-${idx}`}
+                mapping={m}
+                onChange={(val) => handleInputChange(m.pdfFieldName, val)}
+                hideCheckbox={true}
+                forceEnabled={true}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       {missingSectionMappings.length > 0 && (
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 mb-8">
@@ -85,7 +125,7 @@ export const Step3Review: React.FC<Step3ReviewProps> = ({ mappings, supportingDo
               if (first.type === 'CheckBox' && group.length > 1) {
                 return (
                   <MappingGroupRow
-                    key={idx}
+                    key={`missing-${idx}`}
                     label={first.label || 'Group'}
                     mappings={group}
                     onToggle={(index) => {
@@ -101,7 +141,7 @@ export const Step3Review: React.FC<Step3ReviewProps> = ({ mappings, supportingDo
               const m = first;
               return (
                 <MappingRow
-                  key={idx}
+                  key={`missing-${idx}`}
                   mapping={m}
                   onChange={(val) => handleInputChange(m.pdfFieldName, val)}
                   hideCheckbox={true}
