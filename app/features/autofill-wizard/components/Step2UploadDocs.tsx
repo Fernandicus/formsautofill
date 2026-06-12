@@ -89,6 +89,21 @@ export const Step2UploadDocs: React.FC<Step2UploadDocsProps> = ({ onContinue, is
           onClick={handleContinue} 
           disabled={isButtonDisabled}
           isLoading={isProcessingState}
+          className="hidden sm:inline-flex"
+        >
+          {isProcessingState ? 'Processing...' : 'Continue'}
+        </Button>
+      </div>
+
+      {/* Mobile fixed bottom button */}
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-200 z-50">
+        <Button 
+          variant="primary" 
+          onClick={handleContinue} 
+          disabled={isButtonDisabled}
+          isLoading={isProcessingState}
+          className="w-full"
+          size="lg"
         >
           {isProcessingState ? 'Processing...' : 'Continue'}
         </Button>

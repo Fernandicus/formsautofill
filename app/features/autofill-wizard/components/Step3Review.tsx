@@ -81,6 +81,20 @@ export const Step3Review: React.FC<Step3ReviewProps> = ({ mappings, supportingDo
           variant="primary" 
           onClick={() => onConfirm(editedMappings)}
           disabled={isProcessing}
+          className="hidden sm:inline-flex"
+        >
+          Continue
+        </Button>
+      </div>
+
+      {/* Mobile fixed bottom button */}
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-200 z-50">
+        <Button 
+          variant="primary" 
+          onClick={() => onConfirm(editedMappings)}
+          disabled={isProcessing}
+          className="w-full"
+          size="lg"
         >
           Continue
         </Button>
