@@ -6,6 +6,7 @@ import { WizardCard } from './base/WizardCard';
 import { WizardStepHeader } from './items/WizardStepHeader';
 import { UploadedFileList } from './base/UploadedFileList';
 import { FileDropzone } from './base/FileDropzone';
+import { MobileFixedBottomButton } from './base/MobileFixedBottomButton';
 
 type Step2UploadDocsProps = {
   onContinue: (files: File[]) => void;
@@ -96,18 +97,13 @@ export const Step2UploadDocs: React.FC<Step2UploadDocsProps> = ({ onContinue, is
       </div>
 
       {/* Mobile fixed bottom button */}
-      <div className="sm:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-200 z-50">
-        <Button 
-          variant="primary" 
-          onClick={handleContinue} 
-          disabled={isButtonDisabled}
-          isLoading={isProcessingState}
-          className="w-full"
-          size="lg"
-        >
-          {isProcessingState ? 'Processing...' : 'Continue'}
-        </Button>
-      </div>
+      <MobileFixedBottomButton
+        onClick={handleContinue}
+        disabled={isButtonDisabled}
+        isLoading={isProcessingState}
+      >
+        {isProcessingState ? 'Processing...' : 'Continue'}
+      </MobileFixedBottomButton>
 
       <UploadedFileList files={docs} />
 

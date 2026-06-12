@@ -6,12 +6,88 @@ import { MappingRow } from '../../autofill-v2/components/ReviewModal/MappingRow'
 import { MappingGroupRow } from '../../autofill-v2/components/ReviewModal/MappingGroupRow';
 import { WizardCard } from './base/WizardCard';
 import { UploadedFileList } from './base/UploadedFileList';
+import { MobileFixedBottomButton } from './base/MobileFixedBottomButton';
 
 type Step3ReviewProps = {
   mappings: FieldMapping[];
   supportingDocs: File[];
   onConfirm: (finalMappings: FieldMapping[]) => void;
   isProcessing: boolean;
+};
+
+const ErrorFieldsSection: React.FC<{
+  errorMappings: FieldMapping[];
+  currentErrorCount: number;
+  handleInputChange: (pdfFieldName: string, val: string) => void;
+}> = ({ errorMappings, currentErrorCount, handleInputChange }) => {
+  if (errorMappings.length === 0) return null;
+
+  return (
+    <div className="bg-red-50 border border-red-200 rounded-xl p-6 mb-8">
+      <div className="text-xs font-bold text-red-600 mb-4 uppercase tracking-wide flex items-center gap-2">
+        <AlertCircleIcon className="w-4 h-4" />
+        Error in {currentErrorCount} Fields
+      </div>
+      <div className="space-y-4">
+        {errorMappings.map((m, idx) => (
+          <MappingRow
+            key={`error-${idx}`}
+            mapping={m}
+            onChange={(val) => handleInputChange(m.pdfFieldName, val)}
+            hideCheckbox={true}
+            forceEnabled={true}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const MissingFieldsSection: React.FC<{
+  missingGroups: FieldMapping[][];
+  currentMissingCount: number;
+  handleInputChange: (pdfFieldName: string, val: string) => void;
+}> = ({ missingGroups, currentMissingCount, handleInputChange }) => {
+  if (missingGroups.length === 0) return null;
+
+  return (
+    <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 mb-8">
+      <div className="text-xs font-bold text-amber-600 mb-4 uppercase tracking-wide">
+        Missing {currentMissingCount} Fields
+      </div>
+      <div className="space-y-4">
+        {missingGroups.map((group, idx) => {
+          const first = group[0];
+          if (first.type === 'CheckBox' && group.length > 1) {
+            return (
+              <MappingGroupRow
+                key={`missing-${idx}`}
+                label={first.label || 'Group'}
+                mappings={group}
+                onToggle={(index) => {
+                  const m = group[index];
+                  handleInputChange(m.pdfFieldName, m.userValue === 'Yes' ? '' : 'Yes');
+                }}
+                hideCheckbox={true}
+                forceEnabled={true}
+              />
+            );
+          }
+
+          const m = first;
+          return (
+            <MappingRow
+              key={`missing-${idx}`}
+              mapping={m}
+              onChange={(val) => handleInputChange(m.pdfFieldName, val)}
+              hideCheckbox={true}
+              forceEnabled={true}
+            />
+          );
+        })}
+      </div>
+    </div>
+  );
 };
 
 export const Step3Review: React.FC<Step3ReviewProps> = ({ mappings, supportingDocs, onConfirm, isProcessing }) => {
@@ -88,17 +164,12 @@ export const Step3Review: React.FC<Step3ReviewProps> = ({ mappings, supportingDo
       </div>
 
       {/* Mobile fixed bottom button */}
-      <div className="sm:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-200 z-50">
-        <Button 
-          variant="primary" 
-          onClick={() => onConfirm(editedMappings)}
-          disabled={isProcessing}
-          className="w-full"
-          size="lg"
-        >
-          Continue
-        </Button>
-      </div>
+      <MobileFixedBottomButton
+        onClick={() => onConfirm(editedMappings)}
+        disabled={isProcessing}
+      >
+        Continue
+      </MobileFixedBottomButton>
 
       <p className="text-slate-600 mb-6">
         {percentage < 100 || errorSectionMappings.length > 0
@@ -108,64 +179,17 @@ export const Step3Review: React.FC<Step3ReviewProps> = ({ mappings, supportingDo
 
       <UploadedFileList files={supportingDocs} />
 
-      {errorSectionMappings.length > 0 && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-6 mb-8">
-          <div className="text-xs font-bold text-red-600 mb-4 uppercase tracking-wide flex items-center gap-2">
-            <AlertCircleIcon className="w-4 h-4" />
-            Error in {currentErrorCount} Fields
-          </div>
-          <div className="space-y-4">
-            {errorSectionMappings.map((m, idx) => (
-              <MappingRow
-                key={`error-${idx}`}
-                mapping={m}
-                onChange={(val) => handleInputChange(m.pdfFieldName, val)}
-                hideCheckbox={true}
-                forceEnabled={true}
-              />
-            ))}
-          </div>
-        </div>
-      )}
+      <ErrorFieldsSection
+        errorMappings={errorSectionMappings}
+        currentErrorCount={currentErrorCount}
+        handleInputChange={handleInputChange}
+      />
 
-      {missingSectionMappings.length > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 mb-8">
-          <div className="text-xs font-bold text-amber-600 mb-4 uppercase tracking-wide">
-            Missing {currentMissingCount} Fields
-          </div>
-          <div className="space-y-4">
-            {missingGroups.map((group, idx) => {
-              const first = group[0];
-              if (first.type === 'CheckBox' && group.length > 1) {
-                return (
-                  <MappingGroupRow
-                    key={`missing-${idx}`}
-                    label={first.label || 'Group'}
-                    mappings={group}
-                    onToggle={(index) => {
-                      const m = group[index];
-                      handleInputChange(m.pdfFieldName, m.userValue === 'Yes' ? '' : 'Yes');
-                    }}
-                    hideCheckbox={true}
-                    forceEnabled={true}
-                  />
-                );
-              }
-
-              const m = first;
-              return (
-                <MappingRow
-                  key={`missing-${idx}`}
-                  mapping={m}
-                  onChange={(val) => handleInputChange(m.pdfFieldName, val)}
-                  hideCheckbox={true}
-                  forceEnabled={true}
-                />
-              );
-            })}
-          </div>
-        </div>
-      )}
+      <MissingFieldsSection
+        missingGroups={missingGroups}
+        currentMissingCount={currentMissingCount}
+        handleInputChange={handleInputChange}
+      />
 
     </WizardCard>
   );
