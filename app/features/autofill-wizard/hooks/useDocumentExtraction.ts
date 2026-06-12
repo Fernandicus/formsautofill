@@ -11,16 +11,17 @@ export const useDocumentExtraction = () => {
   const extractFieldsFromDocuments = useCallback(async (files: File[]): Promise<UserField[]> => {
     setIsExtracting(true);
     setExtractionError(null);
-    let allExtractedFields: UserField[] = [];
 
     try {
-      for (const file of files) {
+      const extractionPromises = files.map(async (file) => {
         logger.info('DOC_EXTRACTION', `Extracting from ${file.name}`);
         const base64 = await fileToBase64(file);
-        
-        const fields = await fetchExtractedFields(base64, file.type);
-        allExtractedFields = [...allExtractedFields, ...fields];
-      }
+        return fetchExtractedFields(base64, file.type);
+      });
+
+      const results = await Promise.all(extractionPromises);
+      const allExtractedFields = results.flat();
+
       logger.info('DOC_EXTRACTION', `Total extracted fields: ${allExtractedFields.length}`);
       return allExtractedFields;
     } catch (error) {

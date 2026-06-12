@@ -22,8 +22,8 @@ export const useWizardWorkflow = () => {
     dispatch({ type: 'SET_PROCESSING', payload: { isProcessing: true, message: 'Extracting data from documents...' } });
 
     try {
-      // 1. Extract data from supporting documents
-      const extractedFields = await extractFieldsFromDocuments(supportingDocs);
+      // 1. Start extracting data from supporting documents concurrently
+      const extractedFieldsPromise = extractFieldsFromDocuments(supportingDocs);
 
       // 2. Scan main PDF form fields
       dispatch({ type: 'SET_PROCESSING', payload: { isProcessing: true, message: 'Scanning PDF form...' } });
@@ -35,7 +35,13 @@ export const useWizardWorkflow = () => {
 
       // 3. Generate Markdown with embedded markers for Gemini context
       dispatch({ type: 'SET_PROCESSING', payload: { isProcessing: true, message: 'Analyzing form structure...' } });
-      const markedMarkdown = await generateMarkdownFromPdf(state.mainPdf, pdfFields);
+      const markedMarkdownPromise = generateMarkdownFromPdf(state.mainPdf, pdfFields);
+
+      // Wait for both concurrent tasks to finish
+      const [extractedFields, markedMarkdown] = await Promise.all([
+        extractedFieldsPromise,
+        markedMarkdownPromise
+      ]);
 
       // 4. Send everything to Gemini Map API (v3)
       dispatch({ type: 'SET_PROCESSING', payload: { isProcessing: true, message: 'Matching your data to the form...' } });
