@@ -1,12 +1,13 @@
-import React, { useState, useMemo } from 'react';
+import React from 'react';
 import { FieldMapping } from '@/app/shared/types';
 import { Button } from '@/app/shared/components/Button';
 import { AlertCircleIcon } from 'lucide-react';
-import { MappingRow } from '../../autofill-v2/components/ReviewModal/MappingRow';
-import { MappingGroupRow } from '../../autofill-v2/components/ReviewModal/MappingGroupRow';
 import { WizardCard } from './base/WizardCard';
 import { UploadedFileList } from './base/UploadedFileList';
 import { MobileFixedBottomButton } from './base/MobileFixedBottomButton';
+import { ErrorFieldsSection } from './items/ErrorFieldsSection';
+import { MissingFieldsSection } from './items/MissingFieldsSection';
+import { useReviewState } from '../hooks/useReviewState';
 
 type Step3ReviewProps = {
   mappings: FieldMapping[];
@@ -15,136 +16,16 @@ type Step3ReviewProps = {
   isProcessing: boolean;
 };
 
-const ErrorFieldsSection: React.FC<{
-  errorMappings: FieldMapping[];
-  currentErrorCount: number;
-  handleInputChange: (pdfFieldName: string, val: string) => void;
-}> = ({ errorMappings, currentErrorCount, handleInputChange }) => {
-  if (errorMappings.length === 0) return null;
-
-  return (
-    <div className="bg-red-50 border border-red-200 rounded-xl p-6 mb-8">
-      <div className="text-xs font-bold text-red-600 mb-4 uppercase tracking-wide flex items-center gap-2">
-        <AlertCircleIcon className="w-4 h-4" />
-        Error in {currentErrorCount} Fields
-      </div>
-      <div className="space-y-4">
-        {errorMappings.map((m, idx) => (
-          <MappingRow
-            key={`error-${idx}`}
-            mapping={m}
-            onChange={(val) => handleInputChange(m.pdfFieldName, val)}
-            hideCheckbox={true}
-            forceEnabled={true}
-          />
-        ))}
-      </div>
-    </div>
-  );
-};
-
-const MissingFieldsSection: React.FC<{
-  missingGroups: FieldMapping[][];
-  currentMissingCount: number;
-  handleInputChange: (pdfFieldName: string, val: string) => void;
-}> = ({ missingGroups, currentMissingCount, handleInputChange }) => {
-  if (missingGroups.length === 0) return null;
-
-  return (
-    <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 mb-8">
-      <div className="text-xs font-bold text-amber-600 mb-4 uppercase tracking-wide">
-        Missing {currentMissingCount} Fields
-      </div>
-      <div className="space-y-4">
-        {missingGroups.map((group, idx) => {
-          const first = group[0];
-          if (first.type === 'CheckBox' && group.length > 1) {
-            return (
-              <MappingGroupRow
-                key={`missing-${idx}`}
-                label={first.label || 'Group'}
-                mappings={group}
-                onToggle={(index) => {
-                  const m = group[index];
-                  handleInputChange(m.pdfFieldName, m.userValue === 'Yes' ? '' : 'Yes');
-                }}
-                hideCheckbox={true}
-                forceEnabled={true}
-              />
-            );
-          }
-
-          const m = first;
-          return (
-            <MappingRow
-              key={`missing-${idx}`}
-              mapping={m}
-              onChange={(val) => handleInputChange(m.pdfFieldName, val)}
-              hideCheckbox={true}
-              forceEnabled={true}
-            />
-          );
-        })}
-      </div>
-    </div>
-  );
-};
-
 export const Step3Review: React.FC<Step3ReviewProps> = ({ mappings, supportingDocs, onConfirm, isProcessing }) => {
-  const [editedMappings, setEditedMappings] = useState<FieldMapping[]>(mappings);
-
-  const percentage = useMemo(() => {
-    if (mappings.length === 0) return 100;
-    const filled = editedMappings.filter(m => m.userValue && m.userValue.trim() !== '').length;
-    return Math.round((filled / mappings.length) * 100);
-  }, [editedMappings, mappings]);
-
-  // Keep track of which fields were initially missing so they don't jump sections when edited.
-  const initiallyMissingKeys = useMemo(() => {
-    return new Set(mappings.filter(m => !m.userValue || m.userValue.trim() === '').map(m => m.pdfFieldName));
-  }, [mappings]);
-
-  // Keep track of which fields were initially errors (invalid dropdown values).
-  const initiallyErrorKeys = useMemo(() => {
-    return new Set(mappings.filter(m => {
-      return (m.type === 'Dropdown' || m.type === 'RadioGroup') && 
-             m.options && 
-             m.options.length > 0 && 
-             m.userValue && 
-             !m.options.includes(m.userValue);
-    }).map(m => m.pdfFieldName));
-  }, [mappings]);
-
-  const missingSectionMappings = editedMappings.filter(m => initiallyMissingKeys.has(m.pdfFieldName));
-  const errorSectionMappings = editedMappings.filter(m => initiallyErrorKeys.has(m.pdfFieldName));
-  
-  const currentMissingCount = editedMappings.filter(m => !m.userValue || m.userValue.trim() === '').length;
-  const currentErrorCount = editedMappings.filter(m => {
-    return initiallyErrorKeys.has(m.pdfFieldName) && 
-           (m.type === 'Dropdown' || m.type === 'RadioGroup') && 
-           m.options && 
-           m.options.length > 0 && 
-           m.userValue && 
-           !m.options.includes(m.userValue);
-  }).length;
-
-  const groupMappings = (mappingsToGroup: FieldMapping[]) => {
-    const groups = new Map<string, FieldMapping[]>();
-    mappingsToGroup.forEach(m => {
-      const groupKey = (m.type === 'CheckBox' && m.label) ? `group_${m.label}` : `single_${m.pdfFieldName}`;
-      if (!groups.has(groupKey)) {
-        groups.set(groupKey, []);
-      }
-      groups.get(groupKey)!.push(m);
-    });
-    return Array.from(groups.values());
-  };
-
-  const missingGroups = useMemo(() => groupMappings(missingSectionMappings), [missingSectionMappings]);
-
-  const handleInputChange = (pdfFieldName: string, value: string) => {
-    setEditedMappings(prev => prev.map(m => m.pdfFieldName === pdfFieldName ? { ...m, userValue: value } : m));
-  };
+  const {
+    editedMappings,
+    percentage,
+    errorSectionMappings,
+    currentErrorCount,
+    missingGroups,
+    currentMissingCount,
+    handleInputChange,
+  } = useReviewState(mappings);
 
   return (
     <WizardCard>

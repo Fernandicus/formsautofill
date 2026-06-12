@@ -10,7 +10,7 @@ type Step4DownloadProps = {
 
 export const Step4Download: React.FC<Step4DownloadProps> = ({ downloadUrl, onRestart }) => {
   return (
-    <WizardCard className="p-12 text-center">
+    <WizardCard className="sm:p-12 text-center">
       <h2 className="text-3xl font-bold text-slate-900 mb-4">Form ready to download!</h2>
       <p className="text-slate-600 mb-10 max-w-lg mx-auto">
         The AI has integrated your information directly into the original PDF form. Review it and download it ready to sign.

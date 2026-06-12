@@ -22,7 +22,7 @@ type WizardAction =
   | { type: 'SET_PROCESSING'; payload: { isProcessing: boolean; message?: string } }
   | { type: 'SET_MAPPINGS'; payload: { mappings: FieldMapping[]; pdfLanguage: string; extractedFields: UserField[] } }
   | { type: 'SET_GENERATED_PDF'; payload: string }
-  | { type: 'SET_ERROR'; payload: string }
+  | { type: 'SET_ERROR'; payload: string | null }
   | { type: 'RESET' }
   | { type: 'GO_TO_STEP'; payload: WizardStep };
 

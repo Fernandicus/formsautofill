@@ -11,8 +11,26 @@ export const useWizardWorkflow = () => {
   const [state, dispatch] = useWizardState();
   const { extractFieldsFromDocuments } = useDocumentExtraction();
 
-  const handleMainPdfUpload = useCallback((file: File) => {
-    dispatch({ type: 'SET_MAIN_PDF', payload: file });
+  const handleMainPdfUpload = useCallback(async (file: File) => {
+    dispatch({ type: 'SET_PROCESSING', payload: { isProcessing: true, message: 'Validating PDF form...' } });
+    try {
+      if (file.type !== 'application/pdf') {
+        throw new Error('Please upload a valid PDF file.');
+      }
+      
+      const pdfFields = await extractFormFields(file);
+      
+      if (pdfFields.length === 0) {
+        throw new Error('No fillable forms found in this PDF.');
+      }
+      
+      dispatch({ type: 'SET_MAIN_PDF', payload: file });
+      dispatch({ type: 'SET_PROCESSING', payload: { isProcessing: false } });
+    } catch (error) {
+      logger.error('WIZARD_VALIDATE', 'PDF validation failed.', error);
+      dispatch({ type: 'SET_PROCESSING', payload: { isProcessing: false } });
+      throw error;
+    }
   }, [dispatch]);
 
   const processAllAndMap = useCallback(async (supportingDocs: File[]) => {
@@ -85,11 +103,16 @@ export const useWizardWorkflow = () => {
     dispatch({ type: 'RESET' });
   }, [dispatch]);
 
+  const dismissError = useCallback(() => {
+    dispatch({ type: 'SET_ERROR', payload: null });
+  }, [dispatch]);
+
   return {
     state,
     handleMainPdfUpload,
     processAllAndMap,
     handleConfirmFill,
     resetWizard,
+    dismissError,
   };
 };

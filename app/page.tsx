@@ -18,6 +18,7 @@ const App: React.FC = () => {
     processAllAndMap,
     handleConfirmFill,
     resetWizard,
+    dismissError,
   } = useWizardWorkflow();
 
   return (
@@ -74,7 +75,7 @@ const App: React.FC = () => {
 
       {/* Show error modal if any */}
       {state.error && (
-        <StatusOverlay status={{ step: 'error', message: state.error }} onClose={() => {}} />
+        <StatusOverlay status={{ step: 'error', message: state.error }} onClose={dismissError} />
       )}
     </div>
   );
