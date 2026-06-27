@@ -45,21 +45,6 @@ export const getBinarizedCanvas = (file: File): Promise<HTMLCanvasElement> => {
 };
 
 export const processImages = async (docs: File[]): Promise<File[]> => {
-  const Tesseract = (await import('tesseract.js')).default;
-  return Promise.all(
-    docs.map(async (doc) => {
-      if (!doc.type.startsWith('image/')) {
-        return doc;
-      }
-      try {
-        const binarizedCanvas = await getBinarizedCanvas(doc);
-        const result = await Tesseract.recognize(binarizedCanvas, 'eng');
-        const text = result.data.text;
-        return new File([text], `${doc.name}.txt`, { type: 'text/plain' });
-      } catch (err) {
-        console.error("Error processing image:", err);
-        throw err;
-      }
-    })
-  );
+  console.warn("Client-side OCR via Tesseract.js is disabled in this environment.");
+  return docs;
 };

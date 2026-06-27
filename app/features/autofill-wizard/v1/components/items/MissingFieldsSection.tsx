@@ -1,7 +1,7 @@
 import React from 'react';
 import { FieldMapping } from '@/app/shared/types';
-import { MappingRow } from '../../../autofill-v2/components/ReviewModal/MappingRow';
-import { MappingGroupRow } from '../../../autofill-v2/components/ReviewModal/MappingGroupRow';
+import { MappingRow } from '../../../../autofill-v2/components/ReviewModal/MappingRow';
+import { MappingGroupRow } from '../../../../autofill-v2/components/ReviewModal/MappingGroupRow';
 
 type MissingFieldsSectionProps = {
   missingGroups: FieldMapping[][];

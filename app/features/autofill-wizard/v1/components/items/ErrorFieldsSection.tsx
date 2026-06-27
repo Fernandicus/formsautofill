@@ -1,7 +1,7 @@
 import React from 'react';
 import { FieldMapping } from '@/app/shared/types';
 import { AlertCircleIcon } from 'lucide-react';
-import { MappingRow } from '../../../autofill-v2/components/ReviewModal/MappingRow';
+import { MappingRow } from '../../../../autofill-v2/components/ReviewModal/MappingRow';
 
 type ErrorFieldsSectionProps = {
   errorMappings: FieldMapping[];
