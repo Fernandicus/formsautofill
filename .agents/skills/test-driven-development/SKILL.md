@@ -138,22 +138,22 @@ Next failing test for next feature.
 
 ## TDD Across Testing Levels
 
-Apply the Red-Green-Refactor cycle at the appropriate level. In this workspace (Next.js + Vitest), use the following guide:
+Apply the Red-Green-Refactor cycle at the appropriate level. Use the following guide for different testing levels:
 
 ### 1. Unit Tests (Fastest Loop)
-- **Target**: Pure functions, custom React hooks, UI helper utilities, and parsing logic (e.g., PDF data extraction helpers).
+- **Target**: Pure functions, helper utilities, state managers, and individual logic modules.
 - **TDD Flow**: Extremely fast feedback loop (seconds).
-- **Mocking**: Mock external boundaries (e.g., Google Cloud Storage, Vision API, Gemini API) to keep tests fast, fast, and deterministic. Avoid mocking internal application logic.
-- **Tool**: Vitest.
+- **Mocking**: Mock slow or non-deterministic external boundaries (e.g., database queries, network requests, third-party APIs) to keep tests fast and deterministic. Avoid mocking internal application logic.
+- **Tool**: The configured unit testing runner.
 
-### 2. Integration Tests (Component & Action Level)
-- **Target**: React components, Next.js Server Actions, API routes, or multi-step service coordinators.
-- **TDD Flow**: Verify that integrated units collaborate correctly (e.g., submitting a form triggers the expected PDF parser and saves the document).
-- **Mocking**: Minimize mocks. Do not mock child React components or internal helper modules unless they execute external network requests.
-- **Tool**: Vitest (+ React Testing Library for component interactions).
+### 2. Integration Tests (Component & Flow Level)
+- **Target**: UI components, server routes, API endpoints, or multi-step service coordinators.
+- **TDD Flow**: Verify that integrated units collaborate correctly (e.g., a component triggering a utility and updating state).
+- **Mocking**: Minimize mocks. Do not mock internal child components or helpers unless they have heavy side effects or network requests.
+- **Tool**: The configured integration/component testing framework.
 
 ### 3. E2E / Acceptance Tests (User Journeys)
-- **Target**: Complete end-to-end user journeys (e.g., "User uploads a PDF -> autofill identifies fields -> form is populated -> user downloads filled PDF").
+- **Target**: Complete end-to-end user journeys and high-level workflows.
 - **Double-Loop TDD**:
   1. **Outer Loop (Acceptance)**: Write a failing high-level integration/E2E test defining the feature requirement (**RED**).
   2. **Inner Loop (TDD)**: To make it pass, step down and write Unit/Integration tests for individual modules, code them to pass, and refactor (**RED-GREEN-REFACTOR**).
