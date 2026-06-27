@@ -1,6 +1,6 @@
 ---
 name: test-driven-development
-description: Use when implementing any feature or bugfix, before writing implementation code
+description: Apply strict Test-Driven Development (TDD) (Red-Green-Refactor) when writing or refactoring code. Trigger this before writing implementation code for any new feature, bug fix, or refactor.
 ---
 
 # Test-Driven Development (TDD)
@@ -15,16 +15,16 @@ Write the test first. Watch it fail. Write minimal code to pass.
 
 ## When to Use
 
-**Always:**
-- New features
-- Bug fixes
-- Refactoring
-- Behavior changes
+- **Implementing New Features:** Write tests defining the expected behavior before writing any code.
+- **Bug Fixes:** Write a failing test that reproduces the bug before fixing it.
+- **Refactoring:** Keep tests green during code cleanup and reorganization.
+- **Behavioral Changes:** Modify tests first to match the new behavior requirements.
 
-**Exceptions (ask your human partner):**
-- Throwaway prototypes
-- Generated code
-- Configuration files
+## When NOT to Use
+
+- **Throwaway Prototypes:** Spikes or pure exploration where the code will be discarded (TDD must be used when rewriting the real implementation).
+- **Non-Logical Files:** Writing static configuration files (e.g., config, JSON files, package.json) or documentation.
+- **Pure Code Generation:** Outputting boilerplate generated entirely by external tools where no manual implementation is required.
 
 Thinking "skip TDD just this once"? Stop. That's rationalization.
 
@@ -70,40 +70,10 @@ digraph tdd_cycle {
 
 ### RED - Write Failing Test
 
-Write one minimal test showing what should happen.
+Write one minimal test showing what should happen. 
 
-<Good>
-```typescript
-test('retries failed operations 3 times', async () => {
-  let attempts = 0;
-  const operation = () => {
-    attempts++;
-    if (attempts < 3) throw new Error('fail');
-    return 'success';
-  };
-
-  const result = await retryOperation(operation);
-
-  expect(result).toBe('success');
-  expect(attempts).toBe(3);
-});
-```
-Clear name, tests real behavior, one thing
-</Good>
-
-<Bad>
-```typescript
-test('retry works', async () => {
-  const mock = jest.fn()
-    .mockRejectedValueOnce(new Error())
-    .mockRejectedValueOnce(new Error())
-    .mockResolvedValueOnce('success');
-  await retryOperation(mock);
-  expect(mock).toHaveBeenCalledTimes(3);
-});
-```
-Vague name, tests mock not code
-</Bad>
+> [!NOTE]
+> For concrete examples of Good and Bad test setups, refer to [samples/retry-operation.test.ts](./samples/retry-operation.test.ts).
 
 **Requirements:**
 - One behavior
@@ -131,37 +101,8 @@ Confirm:
 
 Write simplest code to pass the test.
 
-<Good>
-```typescript
-async function retryOperation<T>(fn: () => Promise<T>): Promise<T> {
-  for (let i = 0; i < 3; i++) {
-    try {
-      return await fn();
-    } catch (e) {
-      if (i === 2) throw e;
-    }
-  }
-  throw new Error('unreachable');
-}
-```
-Just enough to pass
-</Good>
-
-<Bad>
-```typescript
-async function retryOperation<T>(
-  fn: () => Promise<T>,
-  options?: {
-    maxRetries?: number;
-    backoff?: 'linear' | 'exponential';
-    onRetry?: (attempt: number) => void;
-  }
-): Promise<T> {
-  // YAGNI
-}
-```
-Over-engineered
-</Bad>
+> [!NOTE]
+> For concrete examples of Good and Bad minimal implementations, refer to [samples/retry-operation.ts](./samples/retry-operation.ts).
 
 Don't add features, refactor other code, or "improve" beyond the test.
 
@@ -194,6 +135,29 @@ Keep tests green. Don't add behavior.
 ### Repeat
 
 Next failing test for next feature.
+
+## TDD Across Testing Levels
+
+Apply the Red-Green-Refactor cycle at the appropriate level. In this workspace (Next.js + Vitest), use the following guide:
+
+### 1. Unit Tests (Fastest Loop)
+- **Target**: Pure functions, custom React hooks, UI helper utilities, and parsing logic (e.g., PDF data extraction helpers).
+- **TDD Flow**: Extremely fast feedback loop (seconds).
+- **Mocking**: Mock external boundaries (e.g., Google Cloud Storage, Vision API, Gemini API) to keep tests fast, fast, and deterministic. Avoid mocking internal application logic.
+- **Tool**: Vitest.
+
+### 2. Integration Tests (Component & Action Level)
+- **Target**: React components, Next.js Server Actions, API routes, or multi-step service coordinators.
+- **TDD Flow**: Verify that integrated units collaborate correctly (e.g., submitting a form triggers the expected PDF parser and saves the document).
+- **Mocking**: Minimize mocks. Do not mock child React components or internal helper modules unless they execute external network requests.
+- **Tool**: Vitest (+ React Testing Library for component interactions).
+
+### 3. E2E / Acceptance Tests (User Journeys)
+- **Target**: Complete end-to-end user journeys (e.g., "User uploads a PDF -> autofill identifies fields -> form is populated -> user downloads filled PDF").
+- **Double-Loop TDD**:
+  1. **Outer Loop (Acceptance)**: Write a failing high-level integration/E2E test defining the feature requirement (**RED**).
+  2. **Inner Loop (TDD)**: To make it pass, step down and write Unit/Integration tests for individual modules, code them to pass, and refactor (**RED-GREEN-REFACTOR**).
+  3. **Complete**: Once all inner loops pass, verify the outer loop turns **GREEN**.
 
 ## Good Tests
 
@@ -291,28 +255,14 @@ Tests-first force edge case discovery before implementing. Tests-after verify yo
 
 **Bug:** Empty email accepted
 
-**RED**
-```typescript
-test('rejects empty email', async () => {
-  const result = await submitForm({ email: '' });
-  expect(result.error).toBe('Email required');
-});
-```
+For full example code, refer to:
+- RED (Failing Test): [samples/submit-form.test.ts](./samples/submit-form.test.ts)
+- GREEN (Passing Implementation): [samples/submit-form.ts](./samples/submit-form.ts)
 
 **Verify RED**
 ```bash
 $ npm test
 FAIL: expected 'Email required', got undefined
-```
-
-**GREEN**
-```typescript
-function submitForm(data: FormData) {
-  if (!data.email?.trim()) {
-    return { error: 'Email required' };
-  }
-  // ...
-}
 ```
 
 **Verify GREEN**
@@ -354,12 +304,16 @@ Bug found? Write failing test reproducing it. Follow TDD cycle. Test proves fix 
 
 Never fix bugs without a test.
 
-## Testing Anti-Patterns
+## Related Documentation & Skills
 
-When adding mocks or test utilities, read [testing-anti-patterns.md](testing-anti-patterns.md) to avoid common pitfalls:
+When adding mocks or test utilities, read [testing-anti-patterns.md](./testing-anti-patterns.md) to avoid common pitfalls:
 - Testing mock behavior instead of real behavior
 - Adding test-only methods to production classes
 - Mocking without understanding dependencies
+
+For related architectural patterns and development standards in this workspace:
+- For general code quality, SOLID principles, and refactoring guidelines during the Refactor stage, refer to [typescript-architect](../typescript-architect/SKILL.md).
+- For component composition, custom hooks, and state management in React, refer to [react-architecture](../react-architecture/SKILL.md).
 
 ## Final Rule
 
