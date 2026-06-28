@@ -2,12 +2,12 @@ import React from 'react';
 import { FieldMapping } from '@/app/shared/types';
 import { Button } from '@/app/shared/components/Button';
 import { AlertCircleIcon } from 'lucide-react';
-import { WizardCard } from './base/WizardCard';
-import { UploadedFileList } from './base/UploadedFileList';
-import { MobileFixedBottomButton } from './base/MobileFixedBottomButton';
-import { ErrorFieldsSection } from './items/ErrorFieldsSection';
-import { MissingFieldsSection } from './items/MissingFieldsSection';
-import { useReviewState } from '../hooks/useReviewState';
+import { WizardCard } from '@/app/features/autofill-wizard/v2/components/base/WizardCard';
+import { UploadedFileList } from '@/app/features/autofill-wizard/v2/components/base/UploadedFileList';
+import { MobileFixedBottomButton } from '@/app/features/autofill-wizard/v2/components/base/MobileFixedBottomButton';
+import { ErrorFieldsSection } from '@/app/features/autofill-wizard/v2/components/items/ErrorFieldsSection';
+import { MissingFieldsSection } from '@/app/features/autofill-wizard/v2/components/items/MissingFieldsSection';
+import { useReviewState } from '@/app/features/autofill-wizard/v2/hooks/useReviewState';
 
 type Step3ReviewProps = {
   mappings: FieldMapping[];

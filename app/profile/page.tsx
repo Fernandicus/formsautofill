@@ -1,11 +1,11 @@
 'use client';
 
 import React from 'react';
-import { DataProfile } from '../features/profile/components/DataProfile';
-import { UserOnboarding } from '../features/profile/components/UserOnboarding';
-import { useDataGroups } from '../features/profile/hooks/useDataGroups';
-import { useOnboarding } from '../features/profile/hooks/useOnboarding';
-import { AppHeader } from '../shared/components/AppHeader';
+import { DataProfile } from '@/app/features/profile/components/DataProfile';
+import { UserOnboarding } from '@/app/features/profile/components/UserOnboarding';
+import { useDataGroups } from '@/app/features/profile/hooks/useDataGroups';
+import { useOnboarding } from '@/app/features/profile/hooks/useOnboarding';
+import { AppHeader } from '@/app/shared/components/AppHeader';
 
 const ProfilePage: React.FC = () => {
   const {

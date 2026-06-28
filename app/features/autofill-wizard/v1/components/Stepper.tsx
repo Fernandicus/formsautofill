@@ -1,7 +1,7 @@
 import React from 'react';
-import { WizardStep } from '../hooks/useWizardState';
+import { WizardStep } from '@/app/features/autofill-wizard/v1/hooks/useWizardState';
 import { FileText, Database, CheckCircle2 } from 'lucide-react';
-import { WizardCard } from './base/WizardCard';
+import { WizardCard } from '@/app/features/autofill-wizard/v1/components/base/WizardCard';
 
 type StepperProps = {
   currentStep: WizardStep;

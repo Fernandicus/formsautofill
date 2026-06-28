@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { UserField } from '@/app/shared/types';
-import { PlusIcon, TrashIcon } from '../../../../../icons';
+import { PlusIcon, TrashIcon } from '@/icons';
 
 interface UserOnboardingProps {
   onComplete: (fields: Omit<UserField, 'id'>[]) => void;

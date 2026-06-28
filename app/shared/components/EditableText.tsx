@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CheckIcon, CloseIcon, EditSquareIcon } from '../../../icons';
+import { CheckIcon, CloseIcon, EditSquareIcon } from '@/icons';
 import { cn } from '@/app/shared/utils/cn';
 
 type EditableTextProps = {

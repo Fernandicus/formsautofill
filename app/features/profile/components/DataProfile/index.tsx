@@ -1,7 +1,7 @@
 import React from 'react';
 import { DataGroup } from '@/app/shared/types';
 import { GroupCard } from './GroupCard';
-import { PlusIcon } from '../../../../../icons';
+import { PlusIcon } from '@/icons';
 
 type DataProfileProps = {
   groups: DataGroup[];

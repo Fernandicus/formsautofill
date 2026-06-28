@@ -5,7 +5,7 @@ import { MappingGroupRow } from './MappingGroupRow';
 import { ReviewSection } from './ReviewSection';
 import { SaveDataPrompt } from './SaveDataPrompt';
 import { useReviewMappings } from '@/app/features/autofill-v2/hooks/useReviewMappings';
-import { ArrowRightIcon, CheckCircleIcon, CloseIcon, MissingDataIcon, SparkleIcon, SpinnerIcon, TranslateIcon } from '../../../../../icons';
+import { ArrowRightIcon, CheckCircleIcon, CloseIcon, MissingDataIcon, SparkleIcon, SpinnerIcon, TranslateIcon } from '@/icons';
 import { Modal, ModalHeader, ModalBody, ModalFooter } from '@/app/shared/components/Modal';
 import { Button } from '@/app/shared/components/Button';
 

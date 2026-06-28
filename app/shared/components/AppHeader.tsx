@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { AutoFillLogoIcon } from '../../../icons';
+import { AutoFillLogoIcon } from '@/icons';
 
 export const AppHeader: React.FC = () => {
   return (

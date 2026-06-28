@@ -1,6 +1,6 @@
 import React from 'react';
 import { FieldMapping } from '@/app/shared/types';
-import { CheckCircleIcon } from '../../../../../icons';
+import { CheckCircleIcon } from '@/icons';
 import { AlertCircleIcon } from 'lucide-react';
 
 // --- Types ---

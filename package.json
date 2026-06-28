@@ -9,7 +9,9 @@
     "start": "next start",
     "lint": "next lint",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d out"
+    "deploy": "gh-pages -d out",
+    "test": "vitest",
+    "test:run": "vitest run"
   },
   "dependencies": {
     "@google-cloud/dlp": "^4.2.0",

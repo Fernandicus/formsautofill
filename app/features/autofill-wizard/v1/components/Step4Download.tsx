@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/app/shared/components/Button';
 import { DownloadIcon, RefreshCwIcon } from 'lucide-react';
-import { WizardCard } from './base/WizardCard';
+import { WizardCard } from '@/app/features/autofill-wizard/v1/components/base/WizardCard';
 
 type Step4DownloadProps = {
   downloadUrl: string | null;

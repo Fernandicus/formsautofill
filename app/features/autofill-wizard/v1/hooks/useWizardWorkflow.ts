@@ -1,11 +1,11 @@
 import { useCallback } from 'react';
-import { useWizardState } from './useWizardState';
-import { useDocumentExtraction } from './useDocumentExtraction';
+import { useWizardState } from '@/app/features/autofill-wizard/v1/hooks/useWizardState';
+import { useDocumentExtraction } from '@/app/features/autofill-wizard/v1/hooks/useDocumentExtraction';
 import { extractFormFields, generateMarkdownFromPdf, fillPdf } from '@/app/features/autofill-v2/services/pdfService';
 import { FieldMapping } from '@/app/shared/types';
 import { logger } from '@/app/shared/utils/logger';
-import { mergeGeminiMappings } from '../utils/mappingUtils';
-import { fetchMappedFieldsV3 } from '../services/wizardApiService';
+import { mergeGeminiMappings } from '@/app/features/autofill-wizard/v1/utils/mappingUtils';
+import { fetchMappedFieldsV3 } from '@/app/features/autofill-wizard/v1/services/wizardApiService';
 
 export const useWizardWorkflow = () => {
   const [state, dispatch] = useWizardState();

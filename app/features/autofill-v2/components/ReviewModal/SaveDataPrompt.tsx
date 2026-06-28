@@ -1,7 +1,7 @@
 import React from 'react';
 import { FieldMapping, UserField } from '@/app/shared/types';
 import { FieldItem } from '@/app/features/profile/components/DataProfile/FieldItem';
-import { SaveDataIcon } from '../../../../../icons';
+import { SaveDataIcon } from '@/icons';
 import { Modal, ModalHeader, ModalBody, ModalFooter } from '@/app/shared/components/Modal';
 import { Button } from '@/app/shared/components/Button';
 

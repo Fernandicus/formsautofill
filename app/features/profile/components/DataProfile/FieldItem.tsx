@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { UserField } from '@/app/shared/types';
-import { TrashIcon } from '../../../../../icons';
+import { TrashIcon } from '@/icons';
 import { EditableText } from '@/app/shared/components/EditableText';
 
 type FieldItemProps = {

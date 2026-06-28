@@ -1,8 +1,8 @@
 import { useCallback, useState } from 'react';
 import { UserField } from '@/app/shared/types';
 import { logger } from '@/app/shared/utils/logger';
-import { fileToBase64 } from '../utils/fileUtils';
-import { fetchExtractedFields } from '../services/wizardApiService';
+import { fileToBase64 } from '@/app/features/autofill-wizard/v1/utils/fileUtils';
+import { fetchExtractedFields } from '@/app/features/autofill-wizard/v1/services/wizardApiService';
 
 export const useDocumentExtraction = () => {
   const [isExtracting, setIsExtracting] = useState(false);

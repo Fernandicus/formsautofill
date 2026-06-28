@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { ChevronIcon } from '../../../../../icons';
+import { ChevronIcon } from '@/icons';
 
 type ReviewSectionProps = {
   title: string;

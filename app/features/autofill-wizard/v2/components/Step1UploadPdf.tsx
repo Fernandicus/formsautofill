@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { UploadIcon } from '@/icons';
-import { WizardCard } from './base/WizardCard';
-import { WizardStepHeader } from './items/WizardStepHeader';
-import { FileDropzone } from './base/FileDropzone';
+import { WizardCard } from '@/app/features/autofill-wizard/v2/components/base/WizardCard';
+import { WizardStepHeader } from '@/app/features/autofill-wizard/v2/components/items/WizardStepHeader';
+import { FileDropzone } from '@/app/features/autofill-wizard/v2/components/base/FileDropzone';
 
 type Step1UploadPdfProps = {
   onUpload: (file: File) => Promise<void> | void;

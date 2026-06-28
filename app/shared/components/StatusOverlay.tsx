@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ProcessingStatus } from '@/app/shared/types';
-import { CheckIcon, CloseIcon, DocumentIcon, ExternalLinkIcon, SearchIcon, SparkleIcon, UserIcon, WarningIcon } from '../../../icons';
+import { CheckIcon, CloseIcon, DocumentIcon, ExternalLinkIcon, SearchIcon, SparkleIcon, UserIcon, WarningIcon } from '@/icons';
 import { Modal, ModalBody } from '@/app/shared/components/Modal';
 import { Button } from '@/app/shared/components/Button';
 import { cn } from '@/app/shared/utils/cn';
@@ -10,7 +10,7 @@ type StatusOverlayProps = {
   onClose: () => void;
 };
 
-import { useStatusOverlayLogic } from '../hooks/useStatusOverlayLogic';
+import { useStatusOverlayLogic } from '@/app/shared/hooks/useStatusOverlayLogic';
 
 const AnimatedProcessingMarquee = () => (
   <div className="relative w-full h-16 mb-8 overflow-hidden bg-background rounded-xl border border-border/50 flex items-center">

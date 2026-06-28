@@ -2,14 +2,14 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AppHeader } from './shared/components/AppHeader';
-import { useWizardWorkflow } from './features/autofill-wizard/v2/hooks/useWizardWorkflow';
-import { Stepper } from './features/autofill-wizard/v2/components/Stepper';
-import { Step1UploadPdf } from './features/autofill-wizard/v2/components/Step1UploadPdf';
-import { Step2UploadDocs } from './features/autofill-wizard/v2/components/Step2UploadDocs';
-import { Step3Review } from './features/autofill-wizard/v2/components/Step3Review';
-import { Step4Download } from './features/autofill-wizard/v2/components/Step4Download';
-import { StatusOverlay } from './shared/components/StatusOverlay';
+import { AppHeader } from '@/app/shared/components/AppHeader';
+import { useWizardWorkflow } from '@/app/features/autofill-wizard/v2/hooks/useWizardWorkflow';
+import { Stepper } from '@/app/features/autofill-wizard/v2/components/Stepper';
+import { Step1UploadPdf } from '@/app/features/autofill-wizard/v2/components/Step1UploadPdf';
+import { Step2UploadDocs } from '@/app/features/autofill-wizard/v2/components/Step2UploadDocs';
+import { Step3Review } from '@/app/features/autofill-wizard/v2/components/Step3Review';
+import { Step4Download } from '@/app/features/autofill-wizard/v2/components/Step4Download';
+import { StatusOverlay } from '@/app/shared/components/StatusOverlay';
 
 const App: React.FC = () => {
   const {

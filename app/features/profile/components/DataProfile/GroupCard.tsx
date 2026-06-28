@@ -4,7 +4,7 @@ import { extractDataFromDocument } from '@/app/features/autofill-v2/services/gem
 import { FieldItem } from './FieldItem';
 import { AddFieldForm } from './AddFieldForm';
 import { EditableText } from '@/app/shared/components/EditableText';
-import { ChevronIcon, CloseIcon, DuplicateIcon, RefreshIcon, TrashIcon, UserIcon } from '../../../../../icons';
+import { ChevronIcon, CloseIcon, DuplicateIcon, RefreshIcon, TrashIcon, UserIcon } from '@/icons';
 
 type GroupCardProps = { 
   group: DataGroup; 
@@ -13,7 +13,7 @@ type GroupCardProps = {
   duplicateGroup: (id: string) => void;
 };
 
-import { useGroupCardLogic } from '../../hooks/useGroupCardLogic';
+import { useGroupCardLogic } from '@/app/features/profile/hooks/useGroupCardLogic';
 
 export const GroupCard: React.FC<GroupCardProps> = ({ 
   group, 

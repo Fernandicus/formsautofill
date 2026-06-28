@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { UploadIcon } from '@/icons';
 import { Button } from '@/app/shared/components/Button';
-import { processImages } from '../utils/imageProcessing';
-import { WizardCard } from './base/WizardCard';
-import { WizardStepHeader } from './items/WizardStepHeader';
-import { UploadedFileList } from './base/UploadedFileList';
-import { FileDropzone } from './base/FileDropzone';
-import { MobileFixedBottomButton } from './base/MobileFixedBottomButton';
+import { processImages } from '@/app/features/autofill-wizard/v1/utils/imageProcessing';
+import { WizardCard } from '@/app/features/autofill-wizard/v1/components/base/WizardCard';
+import { WizardStepHeader } from '@/app/features/autofill-wizard/v1/components/items/WizardStepHeader';
+import { UploadedFileList } from '@/app/features/autofill-wizard/v1/components/base/UploadedFileList';
+import { FileDropzone } from '@/app/features/autofill-wizard/v1/components/base/FileDropzone';
+import { MobileFixedBottomButton } from '@/app/features/autofill-wizard/v1/components/base/MobileFixedBottomButton';
 
 type Step2UploadDocsProps = {
   onContinue: (files: File[]) => void;

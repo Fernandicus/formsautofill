@@ -30,7 +30,9 @@ Do NOT use this skill when:
 ### Notes
 
 - Vitest and Testing Library is a testing framework for TypeScript that is used to test TypeScript code.
-- Use the `__tests__` directory for test files.
+- Use the `__tests__` directory into the root folder for test files.
+- Follow the same directory structure for the tests as the production code, but with the `__tests__` directory inside of it. For example, if you have `app/shared/utils/dlp.ts`, you should have `__tests__/shared/utils/dlp.test.ts`.
+- Mocks should be in their own folder inside of the `__tests__` directory, next to the test files. For example, if you have `__tests__/shared/utils/dlp.test.ts`, you should have `__tests__/shared/utils/__mocks__/dlp.test.ts`.
 
 ## 1. Structure with Arrange-Act-Assert (AAA)
 
