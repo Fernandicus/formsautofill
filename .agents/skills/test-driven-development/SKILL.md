@@ -13,6 +13,11 @@ Write the test first. Watch it fail. Write minimal code to pass.
 
 **Violating the letter of the rules is violating the spirit of the rules.**
 
+## Related Documentation
+
+- For principles on writing clean, readable, and deterministic tests (such as Arrange-Act-Assert structure, avoiding logic in tests, and DAMP test design), refer to [typescript-testing](../typescript-testing/SKILL.md).
+- For common testing pitfalls and mocking guidelines, refer to [testing-anti-patterns.md](./testing-anti-patterns.md).
+
 ## When to Use
 
 - **Implementing New Features:** Write tests defining the expected behavior before writing any code.

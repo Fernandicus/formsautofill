@@ -2,9 +2,13 @@
 description: Set up testing infrastructure and safely adopt TDD in a codebase with zero existing tests
 ---
 
-# Workflow: Bootstrapping TDD in a Testless Codebase
+## Questions to the User
 
-Use this workflow when you need to write tests, fix bugs, or implement features in a repository or module that currently has no automated tests.
+- **What do you want to test?** (e.g., a feature, a function, or the infrastructure)
+  - **If the user wants to test a feature:**
+    1. Ask for or look for the feature documentation in the `/docs` folder.
+    2. Identify the most critical or sensitive parts of the feature, and partition them following Hexagonal Architecture principles (Domain, Application, Infrastructure).
+    3. Build corresponding tests for these components.
 
 ## Guardrails
 - **No changes to production code** until the test runner is configured and verified.
@@ -19,14 +23,14 @@ Use this workflow when you need to write tests, fix bugs, or implement features 
 a) Before writing any code or tests, define what needs to be tested:
 - **Which features, files or functions should be tested?** Identify the target implementation modules.
 - **What is the expected behavior, edge cases, and error paths?** Define the happy path and any possible failure scenarios.
-b) In case the test is for a full feature check the `/docs` folder to read the documentation (if exists) and understand how it works. 
+b) In case the test is for a full feature, check the `/docs` folder to read the documentation (if it exists) and understand how it works.
 
 
 ### Step 2: Review Relevant Skills
-Ensure you understand the codebase guidelines and best practices for writing clean code and tests
+Ensure you understand the codebase guidelines and best practices for writing clean code and tests, and check any relevant skills.
 
 ### Step 3: Establish the Test Infrastructure
-Before writing any actual test, make sure the test runner is fully functional.
+If needed, before writing any actual test, make sure the test runner is fully functional.
 1. **Check Dependencies**: Ensure a test runner suitable for the project's language/framework is installed.
 2. **Configure**: Create configuration files matching the build and runtime setup if needed.
 3. **Smoke Test**: Write a temporary dummy test file (`smoke.test.ts` or language equivalent) to verify execution:
@@ -45,7 +49,26 @@ If you need to edit or refactor *existing* untested code, you must first documen
 1. **Identify Boundaries**: Find the inputs and outputs of the module/function you want to modify.
 2. **Write Characterization Tests**: Write tests that assert the *current actual behavior*, even if it seems incorrect or buggy. 
    - *Example*: If a function returns `null` for a bad input instead of throwing, write a test asserting it returns `null`.
-3. **Verify Green**: Run these tests to make sure they pass. This is your safety net.
+3. **Verify Green**: Run these tests to make sure they pass. This is your safety net. Practical Example:
+Suppose we have a complex legacy function calculateDiscount(user, total).
+
+```typescript
+// 1. Write a test assuming a false result on purpose
+test('characterization of calculateDiscount for VIP user', () => {
+  const result = calculateDiscount('VIP', 100);
+  expect(result).toBe('DUMMY_VALUE'); // We know this will fail
+});
+
+// 2. Execute. The console outputs:
+// Expected: "DUMMY_VALUE"
+// Received: 85.5
+
+// 3. Fix the test based on reality, not theory.
+test('characterization of calculateDiscount for VIP user', () => {
+  const result = calculateDiscount('VIP', 100);
+  expect(result).toBe(85.5); // The test now passes and protects this behavior
+});
+```
 
 ### Step 5: Transition to TDD
 Now that you have a functioning runner and a safety net, you can safely write code using the standard TDD cycle.
