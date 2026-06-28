@@ -1,0 +1,1 @@
+- Create landing page or hero page for the product making focus in one specific niche (Insurance brokers, Real state, etc) or maybe in multiple of them but showing how it works for different use cases
